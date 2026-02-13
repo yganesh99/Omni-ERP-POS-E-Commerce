@@ -11,14 +11,7 @@ applications:
       cache: "redis:redis"
       queue: "rabbitmq:rabbitmq"
       search: "opensearch:opensearch"
-
-    # Use mounts for network-storage
-    mounts:
-      "/var/uploads":
-        source: service
-        service: network-storage
-        source_path: uploads
-
+       
     web:
       commands:
         start: "npm start"
