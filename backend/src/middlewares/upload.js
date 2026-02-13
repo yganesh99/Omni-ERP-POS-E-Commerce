@@ -2,7 +2,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'invoices');
+// const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'invoices');
+
+// UPSUN_STORAGE_ROOT points to mounted storage
+const UPLOAD_ROOT = process.env.UPLOAD_ROOT || '/var/uploads';
+const UPLOAD_DIR = path.join(UPLOAD_ROOT, 'invoices');
 
 // Ensure the upload directory exists
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
