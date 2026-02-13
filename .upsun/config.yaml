@@ -1,44 +1,62 @@
 applications:
-    erp:
-        source:
-            root: '/backend'
-        type: 'nodejs:24'
+  erp:
+    source:
+      root: "/backend"
 
-        hooks:
-            build: |
-                npm ci
-                npm run build
-
-        web:
-            commands:
-                start: 'node dist/server.js'
-
-    web:
-        source:
-            root: '/frontend'
-        type: 'nodejs:24'
-
-        hooks:
-            build: |
-                npm ci
-                npm run build
-
-        web:
-            commands:
-                start: 'npx vite preview --port $PORT --host'
+    type: "nodejs:24"
 
     relationships:
-        network-storage:
-        opensearch:
-        postgresql:
-        rabbitmq:
-        redis:
+      database: "postgresql:postgresql"
+      cache: "redis:redis"
+      queue: "rabbitmq:rabbitmq"
+      search: "opensearch:opensearch"
+      storage: "network-storage:network-storage"
+
+    mounts:
+      "/var/uploads":
+        source: service
+        service: network-storage
+        source_path: uploads
+
+    web:
+      commands:
+        start: "node backend/src/config/index.js"
+      upstream:
+        socket_family: tcp
+      locations:
+        "/":
+          passthru: true
+
+    build:
+      flavor: none
+
+    hooks:
+      build: |
+        set -eux
+        npm i
+
+services:
+  postgresql:
+    type: postgresql:18
+
+  redis:
+    type: redis:8.0
+
+  opensearch:
+    type: opensearch:3
+
+  rabbitmq:
+    type: rabbitmq:4.1
+
+  network-storage:
+    type: network-storage:1.0
 
 routes:
-    'https://{default}/api':
-        type: upstream
-        upstream: 'erp:http'
+  "https://{default}/":
+    type: upstream
+    upstream: "erp:http"
 
-    'https://{default}/':
-        type: upstream
-        upstream: 'web:http'
+  "https://www.{default}":
+    type: redirect
+    to: "https://{default}/"
+
