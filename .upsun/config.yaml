@@ -5,13 +5,14 @@ applications:
 
     type: "nodejs:24"
 
+    # Only actual services go here
     relationships:
       database: "postgresql:postgresql"
       cache: "redis:redis"
       queue: "rabbitmq:rabbitmq"
       search: "opensearch:opensearch"
-      storage: "network-storage:network-storage"
 
+    # Use mounts for network-storage
     mounts:
       "/var/uploads":
         source: service
@@ -20,7 +21,7 @@ applications:
 
     web:
       commands:
-        start: "node backend/src/config/index.js"
+        start: "npm start"
       upstream:
         socket_family: tcp
       locations:
