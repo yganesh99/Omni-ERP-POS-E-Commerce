@@ -1,46 +1,44 @@
 applications:
-  erp:
-    source:
-      root: "/backend"
-    type: "nodejs:24"
+    erp:
+        source:
+            root: '/backend'
+        type: 'nodejs:24'
+
+        hooks:
+            build: |
+                npm ci
+                npm run build
+
+        web:
+            commands:
+                start: 'node dist/server.js'
+
+    web:
+        source:
+            root: '/frontend'
+        type: 'nodejs:24'
+
+        hooks:
+            build: |
+                npm ci
+                npm run build
+
+        web:
+            commands:
+                start: 'npx vite preview --port $PORT --host'
 
     relationships:
-      network-storage:
-      opensearch:
-      postgresql:
-      rabbitmq:
-      redis:
-
-    hooks:
-      build: |
-        npm ci
-        npm run build
-
-    web:
-      commands:
-        start: "node dist/server.js"
-
-  web:
-    source:
-      root: "/frontend"
-    type: "nodejs:24"
-
-    hooks:
-      build: |
-        npm ci
-        npm run build
-
-    web:
-      commands:
-        start: "npx vite preview --port $PORT --host"
+        network-storage:
+        opensearch:
+        postgresql:
+        rabbitmq:
+        redis:
 
 routes:
-  "https://{default}/api":
-    type: upstream
-    upstream: "erp:http"
+    'https://{default}/api':
+        type: upstream
+        upstream: 'erp:http'
 
-  "https://{default}/":
-    type: upstream
-    upstream: "web:http"
-
-
+    'https://{default}/':
+        type: upstream
+        upstream: 'web:http'
