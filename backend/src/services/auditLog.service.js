@@ -1,10 +1,9 @@
 const AuditLog = require('../models/auditLog.model');
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ entity, action, userId, startDate, endDate, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId };
+	const query = {};
 	if (entity) query.entity = entity;
 	if (action) query.action = action;
 	if (userId) query.userId = userId;
@@ -26,10 +25,10 @@ async function getByBusiness(
 	return { items, total, page, limit };
 }
 
-async function getByEntity(businessId, entity, entityId) {
-	return AuditLog.find({ businessId, entity, entityId })
+async function getByEntity( entity, entityId) {
+	return AuditLog.find({ entity, entityId })
 		.populate('userId', 'name email')
 		.sort({ createdAt: -1 });
 }
 
-module.exports = { getByBusiness, getByEntity };
+module.exports = { getAll, getByEntity };

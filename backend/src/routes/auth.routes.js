@@ -22,7 +22,7 @@ router.post(
 		[Segments.BODY]: Joi.object({
 			email: Joi.string().email().required(),
 			password: Joi.string().min(8).required(),
-			name: Joi.string().optional(),
+			name: Joi.string().allow('').optional(),
 		}),
 	}),
 	controller.register,

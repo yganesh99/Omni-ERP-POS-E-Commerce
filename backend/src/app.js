@@ -7,7 +7,6 @@ const { errors } = require('celebrate');
 const path = require('path');
 
 const authRoutes = require('./routes/auth.routes');
-const businessRoutes = require('./routes/business.routes');
 const storeRoutes = require('./routes/store.routes');
 const userRoutes = require('./routes/user.routes');
 const productRoutes = require('./routes/product.routes');
@@ -22,6 +21,7 @@ const purchaseOrderRoutes = require('./routes/purchaseOrder.routes');
 const supplierInvoiceRoutes = require('./routes/supplierInvoice.routes');
 const taxRoutes = require('./routes/tax.routes');
 const reportingRoutes = require('./routes/reporting.routes');
+const registerRoutes = require('./routes/register.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -36,10 +36,13 @@ require('./config/passport');
 const passport = require('passport');
 app.use(passport.initialize());
 
-const authLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
-	max: 10,
-});
+const authLimiter =
+	process.env.NODE_ENV === 'test'
+		? (_req, _res, next) => next() // disabled in test mode
+		: rateLimit({
+				windowMs: 15 * 60 * 1000,
+				max: 100,
+			});
 
 // ── Health ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) =>
@@ -49,20 +52,18 @@ app.get('/api/health', (req, res) =>
 // ── Auth ────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);
 
-// ── Platform-level ──────────────────────────────────────────────
-app.use('/api/businesses', businessRoutes);
-
-// ── Business-scoped ─────────────────────────────────────────────
-app.use('/api/businesses/:businessId/stores', storeRoutes);
-app.use('/api/businesses/:businessId/users', userRoutes);
-app.use('/api/businesses/:businessId/products', productRoutes);
-app.use('/api/businesses/:businessId/customers', customerRoutes);
-app.use('/api/businesses/:businessId/suppliers', supplierRoutes);
-app.use('/api/businesses/:businessId/orders', orderRoutes);
-app.use('/api/businesses/:businessId/purchase-orders', purchaseOrderRoutes);
-app.use('/api/businesses/:businessId/supplier-invoices', supplierInvoiceRoutes);
-app.use('/api/businesses/:businessId/taxes', taxRoutes);
-app.use('/api/businesses/:businessId/reports', reportingRoutes);
+// ── Store & Resource Routes ─────────────────────────────────────────────
+app.use('/api/stores', storeRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/registers', registerRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/purchase-orders', purchaseOrderRoutes);
+app.use('/api/supplier-invoices', supplierInvoiceRoutes);
+app.use('/api/taxes', taxRoutes);
+app.use('/api/reports', reportingRoutes);
 
 // ── Flat routes ─────────────────────────────────────────────────
 app.use('/api/inventory', inventoryRoutes);

@@ -3,8 +3,12 @@
 import Link from 'next/link';
 import { Trash2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
+	const { user } = useAuth();
+	const router = useRouter();
 	const [items, setItems] = useState([
 		{
 			id: 1,
@@ -201,12 +205,18 @@ export default function CartPage() {
 						</span>
 					</div>
 
-					<Link
-						href='/checkout'
+					<button
+						onClick={() => {
+							if (!user) {
+								router.push('/login?callbackUrl=/checkout');
+							} else {
+								router.push('/checkout');
+							}
+						}}
 						className='block w-full text-center bg-black text-white py-4 text-sm font-bold tracking-wide rounded-sm hover:bg-zinc-800 transition-colors mb-4'
 					>
 						Proceed To Checkout
-					</Link>
+					</button>
 
 					<Link
 						href='/shop'

@@ -11,8 +11,8 @@ async function createUser(data) {
 	return User.create(data);
 }
 
-async function getByBusiness(businessId, filter = {}) {
-	return User.find({ businessId, ...filter }).sort({ name: 1 });
+async function getAll( filter = {}) {
+	return User.find({ ...filter }).sort({ name: 1 });
 }
 
 async function getById(id) {
@@ -44,7 +44,7 @@ async function changePassword(id, newPassword) {
 
 module.exports = {
 	createUser,
-	getByBusiness,
+	getAll,
 	getById,
 	update,
 	toggleActive,

@@ -1,13 +1,11 @@
 const express = require('express');
 const controller = require('../controllers/reportingController');
 const auth = require('../middlewares/auth');
-const businessContext = require('../middlewares/businessContext');
 
 const router = express.Router({ mergeParams: true });
 
 router.use(
-	auth(['super_admin', 'business_admin', 'accountant']),
-	businessContext,
+	auth(['admin']),
 );
 
 // Sales reports

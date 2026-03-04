@@ -1,9 +1,10 @@
+'use strict';
+
 const ecommerceService = require('../services/ecommerce.service');
 
 exports.checkout = async (req, res, next) => {
 	try {
 		const order = await ecommerceService.checkout(
-			req.body.businessId,
 			req.body.storeId,
 			req.body,
 			req.body.ttlMinutes,
@@ -42,7 +43,6 @@ exports.assignStore = async (req, res, next) => {
 exports.processReturn = async (req, res, next) => {
 	try {
 		const result = await ecommerceService.processReturn(
-			req.body.businessId,
 			req.body.orderId,
 			req.body,
 			req.user.id,

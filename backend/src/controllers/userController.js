@@ -4,7 +4,6 @@ exports.create = async (req, res, next) => {
 	try {
 		const user = await userService.createUser({
 			...req.body,
-			businessId: req.businessId,
 		});
 		res.status(201).json(user);
 	} catch (err) {
@@ -14,7 +13,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const list = await userService.getByBusiness(req.businessId, req.query);
+		const list = await userService.getAll(req.query);
 		res.json(list);
 	} catch (err) {
 		next(err);

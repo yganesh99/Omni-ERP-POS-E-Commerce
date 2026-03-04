@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const ROLES = [
-	'super_admin',
-	'business_admin',
+	'admin',
 	'store_manager',
 	'inventory_manager',
 	'accountant',
 	'cashier',
+	'customer',
 ];
 
 const userSchema = new mongoose.Schema(
@@ -28,11 +28,6 @@ const userSchema = new mongoose.Schema(
 			enum: ROLES,
 			required: true,
 			default: 'cashier',
-		},
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			default: null,
 		},
 		storeId: {
 			type: mongoose.Schema.Types.ObjectId,

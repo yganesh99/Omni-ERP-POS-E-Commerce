@@ -1,9 +1,10 @@
+'use strict';
+
 const posService = require('../services/pos.service');
 
 exports.createOrder = async (req, res, next) => {
 	try {
 		const order = await posService.createOrder(
-			req.businessId || req.body.businessId,
 			req.body.storeId,
 			req.body,
 			req.user.id,
@@ -17,7 +18,6 @@ exports.createOrder = async (req, res, next) => {
 exports.refund = async (req, res, next) => {
 	try {
 		const result = await posService.processRefund(
-			req.businessId || req.body.businessId,
 			req.body.orderId,
 			req.body,
 			req.user.id,

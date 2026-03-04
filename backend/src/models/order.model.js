@@ -33,11 +33,6 @@ const paymentDetailSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		storeId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Store',
@@ -84,7 +79,11 @@ const orderSchema = new mongoose.Schema(
 			ref: 'Store',
 			default: null,
 		},
-		sessionId: { type: String, default: null },
+		sessionId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'RegisterSession',
+			default: null,
+		},
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'User',
@@ -93,9 +92,9 @@ const orderSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-orderSchema.index({ businessId: 1, orderNumber: 1 }, { unique: true });
-orderSchema.index({ businessId: 1, channel: 1, status: 1 });
-orderSchema.index({ businessId: 1, customerId: 1 });
-orderSchema.index({ businessId: 1, createdAt: -1 });
+orderSchema.index({ orderNumber: 1 }, { unique: true });
+orderSchema.index({ channel: 1, status: 1 });
+orderSchema.index({ customerId: 1 });
+orderSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);

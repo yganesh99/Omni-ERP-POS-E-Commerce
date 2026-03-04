@@ -2,10 +2,7 @@ const supplierInvoiceService = require('../services/supplierInvoice.service');
 
 exports.create = async (req, res, next) => {
 	try {
-		const invoice = await supplierInvoiceService.create(
-			req.businessId,
-			req.body,
-		);
+		const invoice = await supplierInvoiceService.create(req.body);
 		res.status(201).json(invoice);
 	} catch (err) {
 		next(err);
@@ -14,10 +11,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await supplierInvoiceService.getByBusiness(
-			req.businessId,
-			req.query,
-		);
+		const result = await supplierInvoiceService.getAll(req.query);
 		res.json(result);
 	} catch (err) {
 		next(err);

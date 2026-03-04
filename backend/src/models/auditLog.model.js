@@ -2,10 +2,6 @@ const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-		},
 		userId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'User',
@@ -19,7 +15,7 @@ const auditLogSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-auditLogSchema.index({ businessId: 1, entity: 1, entityId: 1 });
-auditLogSchema.index({ businessId: 1, createdAt: -1 });
+auditLogSchema.index({ entity: 1, entityId: 1 });
+auditLogSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);

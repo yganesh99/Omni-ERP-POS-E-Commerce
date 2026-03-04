@@ -4,8 +4,8 @@ async function create(data) {
 	return Tax.create(data);
 }
 
-async function getByBusiness(businessId) {
-	return Tax.find({ businessId, isActive: true }).sort({ name: 1 });
+async function getAll() {
+	return Tax.find({ isActive: true }).sort({ name: 1 });
 }
 
 async function getById(id) {
@@ -19,8 +19,8 @@ async function update(id, data) {
 	});
 }
 
-async function getDefault(businessId) {
-	return Tax.findOne({ businessId, isDefault: true, isActive: true });
+async function getDefault() {
+	return Tax.findOne({ isDefault: true, isActive: true });
 }
 
-module.exports = { create, getByBusiness, getById, update, getDefault };
+module.exports = { create, getAll, getById, update, getDefault };

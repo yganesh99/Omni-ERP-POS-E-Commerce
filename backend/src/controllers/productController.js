@@ -5,10 +5,8 @@ exports.create = async (req, res, next) => {
 	try {
 		const product = await productService.create({
 			...req.body,
-			businessId: req.businessId,
 		});
 		logAudit({
-			businessId: req.businessId,
 			userId: req.user.id,
 			action: 'create',
 			entity: 'Product',
@@ -23,10 +21,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await productService.getByBusiness(
-			req.businessId,
-			req.query,
-		);
+		const result = await productService.getAll(req.query);
 		res.json(result);
 	} catch (err) {
 		next(err);
@@ -48,7 +43,6 @@ exports.update = async (req, res, next) => {
 		const product = await productService.update(req.params.id, req.body);
 		if (!product) return res.status(404).json({ message: 'Not found' });
 		logAudit({
-			businessId: req.businessId,
 			userId: req.user.id,
 			action: 'update',
 			entity: 'Product',
@@ -65,6 +59,36 @@ exports.toggleActive = async (req, res, next) => {
 	try {
 		const product = await productService.toggleActive(req.params.id);
 		if (!product) return res.status(404).json({ message: 'Not found' });
+		res.json(product);
+	} catch (err) {
+		next(err);
+	}
+};
+
+exports.uploadImage = async (req, res, next) => {
+	try {
+		if (!req.file) {
+			return res.status(400).json({ message: 'No image file provided' });
+		}
+
+		const imageUrl = `/uploads/products/${req.file.filename}`;
+
+		const product = await productService.update(req.params.id, {
+			image: imageUrl,
+		});
+
+		if (!product) {
+			return res.status(404).json({ message: 'Not found' });
+		}
+
+		logAudit({
+			userId: req.user.id,
+			action: 'update_image',
+			entity: 'Product',
+			entityId: product._id,
+			changes: { image: imageUrl },
+		});
+
 		res.json(product);
 	} catch (err) {
 		next(err);

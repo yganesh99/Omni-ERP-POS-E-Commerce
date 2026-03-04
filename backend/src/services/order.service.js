@@ -1,10 +1,9 @@
 const Order = require('../models/order.model');
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ channel, status, customerId, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId };
+	const query = {};
 	if (channel) query.channel = channel;
 	if (status) query.status = status;
 	if (customerId) query.customerId = customerId;
@@ -32,4 +31,4 @@ async function updateStatus(id, status) {
 	return Order.findByIdAndUpdate(id, { status }, { new: true });
 }
 
-module.exports = { getByBusiness, getById, updateStatus };
+module.exports = { getAll, getById, updateStatus };

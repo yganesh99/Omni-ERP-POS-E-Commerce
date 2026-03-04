@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/order.model');
 const Product = require('../models/product.model');
 const Inventory = require('../models/inventory.model');
+const RegisterSession = require('../models/registerSession.model');
 const creditService = require('./credit.service');
 const { logAudit } = require('../middlewares/auditLog');
 
@@ -18,15 +19,32 @@ function generateOrderNumber() {
  * Create a POS order (cash / card / QR / split / credit).
  */
 async function createOrder(
-	businessId,
 	storeId,
-	{ customerId, items, paymentMethod, payments, notes },
+	{ customerId, items, paymentMethod, payments, notes, sessionId },
 	userId,
 ) {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
 	try {
+		if (!sessionId) {
+			throw Object.assign(
+				new Error('Register session required for POS order'),
+				{ status: 400 },
+			);
+		}
+
+		const activeSession = await RegisterSession.findOne({
+			_id: sessionId,
+			status: 'open',
+		}).session(session);
+		if (!activeSession) {
+			throw Object.assign(
+				new Error('Invalid or closed register session'),
+				{ status: 400 },
+			);
+		}
+
 		let subtotal = 0;
 		let taxAmount = 0;
 		const orderItems = [];
@@ -35,7 +53,7 @@ async function createOrder(
 			const product = await Product.findById(item.productId).session(
 				session,
 			);
-			if (!product || String(product.businessId) !== String(businessId)) {
+			if (!product) {
 				throw Object.assign(
 					new Error(`Product ${item.productId} not found`),
 					{ status: 404 },
@@ -51,7 +69,6 @@ async function createOrder(
 			// Decrement inventory
 			const inv = await Inventory.findOneAndUpdate(
 				{
-					businessId,
 					productId: item.productId,
 					storeId,
 					quantity: { $gte: item.quantity },
@@ -103,7 +120,6 @@ async function createOrder(
 		const order = await Order.create(
 			[
 				{
-					businessId,
 					storeId,
 					customerId: customerId || null,
 					orderNumber: generateOrderNumber(),
@@ -117,6 +133,7 @@ async function createOrder(
 					payments: payments || [],
 					creditUsed,
 					notes,
+					sessionId,
 					createdBy: userId,
 				},
 			],
@@ -126,7 +143,6 @@ async function createOrder(
 		// Record credit if applicable
 		if (paymentMethod === 'credit' && customerId) {
 			await creditService.recordCreditSale(
-				businessId,
 				customerId,
 				creditUsed,
 				order[0]._id,
@@ -137,7 +153,6 @@ async function createOrder(
 		await session.commitTransaction();
 
 		logAudit({
-			businessId,
 			userId,
 			action: 'pos_sale',
 			entity: 'Order',
@@ -157,9 +172,9 @@ async function createOrder(
 /**
  * Process a POS refund.
  */
-async function processRefund(businessId, orderId, { items, reason }, userId) {
+async function processRefund(orderId, { items, reason }, userId) {
 	const order = await Order.findById(orderId);
-	if (!order || String(order.businessId) !== String(businessId)) {
+	if (!order) {
 		throw Object.assign(new Error('Order not found'), { status: 404 });
 	}
 
@@ -182,7 +197,6 @@ async function processRefund(businessId, orderId, { items, reason }, userId) {
 			// Restock
 			await Inventory.findOneAndUpdate(
 				{
-					businessId,
 					productId: item.productId,
 					storeId: order.storeId,
 				},
@@ -196,7 +210,6 @@ async function processRefund(businessId, orderId, { items, reason }, userId) {
 		// Reduce credit if credit order
 		if (order.paymentMethod === 'credit' && order.customerId) {
 			await creditService.recordCustomerReturn(
-				businessId,
 				order.customerId,
 				refundTotal,
 				orderId,
@@ -210,7 +223,6 @@ async function processRefund(businessId, orderId, { items, reason }, userId) {
 		await session.commitTransaction();
 
 		logAudit({
-			businessId,
 			userId,
 			action: 'pos_refund',
 			entity: 'Order',

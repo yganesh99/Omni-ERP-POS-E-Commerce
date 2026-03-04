@@ -4,47 +4,53 @@ const fs = require('fs');
 
 // const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'invoices');
 
-// UPSUN_STORAGE_ROOT points to mounted storage
-const UPLOAD_ROOT = process.env.UPLOAD_ROOT || '/var/uploads';
-const UPLOAD_DIR = path.join(UPLOAD_ROOT, 'invoices');
+// UPSUN_STORAGE_ROOT points to mounted storage (production only)
+const UPLOAD_ROOT =
+	process.env.UPLOAD_ROOT || path.join(process.cwd(), 'uploads');
 
-// Ensure the upload directory exists
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const createUpload = (subDir = 'misc') => {
+	const uploadDir = path.join(UPLOAD_ROOT, subDir);
 
-const storage = multer.diskStorage({
-	destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-	filename: (_req, file, cb) => {
-		const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-		const ext = path.extname(file.originalname);
-		cb(null, `${unique}${ext}`);
-	},
-});
+	// Ensure the upload directory exists
+	fs.mkdirSync(uploadDir, { recursive: true });
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+	const storage = multer.diskStorage({
+		destination: (_req, _file, cb) => cb(null, uploadDir),
+		filename: (_req, file, cb) => {
+			const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+			const ext = path.extname(file.originalname);
+			cb(null, `${unique}${ext}`);
+		},
+	});
 
-const fileFilter = (_req, file, cb) => {
-	if (ALLOWED_TYPES.includes(file.mimetype)) {
-		cb(null, true);
-	} else {
-		cb(
-			Object.assign(
-				new Error(
-					'Invalid file type. Only JPEG, PNG, and PDF files are allowed.',
+	const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+	const fileFilter = (_req, file, cb) => {
+		if (ALLOWED_TYPES.includes(file.mimetype)) {
+			cb(null, true);
+		} else {
+			cb(
+				Object.assign(
+					new Error(
+						'Invalid file type. Only JPEG, PNG, and PDF files are allowed.',
+					),
+					{ status: 400 },
 				),
-				{ status: 400 },
-			),
-			false,
-		);
-	}
+				false,
+			);
+		}
+	};
+
+	const upload = multer({
+		storage,
+		fileFilter,
+		limits: {
+			fileSize: 5 * 1024 * 1024, // 5 MB
+			files: 5,
+		},
+	});
+
+	return upload;
 };
 
-const upload = multer({
-	storage,
-	fileFilter,
-	limits: {
-		fileSize: 5 * 1024 * 1024, // 5 MB
-		files: 5,
-	},
-});
-
-module.exports = upload;
+module.exports = createUpload;

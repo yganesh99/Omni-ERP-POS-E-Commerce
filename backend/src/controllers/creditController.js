@@ -2,11 +2,7 @@ const creditService = require('../services/credit.service');
 
 exports.getCustomerLedger = async (req, res, next) => {
 	try {
-		const ledger = await creditService.getLedger(
-			req.businessId || req.query.businessId,
-			'customer',
-			req.params.id,
-		);
+		const ledger = await creditService.getLedger('customer', req.params.id);
 		res.json(ledger);
 	} catch (err) {
 		next(err);
@@ -16,7 +12,6 @@ exports.getCustomerLedger = async (req, res, next) => {
 exports.customerPayment = async (req, res, next) => {
 	try {
 		const entry = await creditService.recordCustomerPayment(
-			req.businessId || req.body.businessId,
 			req.body.customerId,
 			req.body.amount,
 			req.user.id,
@@ -29,11 +24,7 @@ exports.customerPayment = async (req, res, next) => {
 
 exports.getSupplierLedger = async (req, res, next) => {
 	try {
-		const ledger = await creditService.getLedger(
-			req.businessId || req.query.businessId,
-			'supplier',
-			req.params.id,
-		);
+		const ledger = await creditService.getLedger('supplier', req.params.id);
 		res.json(ledger);
 	} catch (err) {
 		next(err);
@@ -43,7 +34,6 @@ exports.getSupplierLedger = async (req, res, next) => {
 exports.supplierPayment = async (req, res, next) => {
 	try {
 		const entry = await creditService.recordSupplierPayment(
-			req.businessId || req.body.businessId,
 			req.body.supplierId,
 			req.body.amount,
 			req.user.id,

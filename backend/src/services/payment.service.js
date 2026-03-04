@@ -4,17 +4,16 @@ async function create(data) {
 	return Payment.create(data);
 }
 
-async function getByEntity(businessId, entityType, entityId) {
-	return Payment.find({ businessId, entityType, entityId }).sort({
+async function getByEntity( entityType, entityId) {
+	return Payment.find({ entityType, entityId }).sort({
 		createdAt: -1,
 	});
 }
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ entityType, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId };
+	const query = {};
 	if (entityType) query.entityType = entityType;
 
 	const skip = (page - 1) * limit;
@@ -25,4 +24,4 @@ async function getByBusiness(
 	return { items, total, page, limit };
 }
 
-module.exports = { create, getByEntity, getByBusiness };
+module.exports = { create, getByEntity, getAll };

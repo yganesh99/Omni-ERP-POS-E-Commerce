@@ -7,16 +7,15 @@ const router = express.Router();
 
 router.get(
 	'/customer/:id',
-	auth(['super_admin', 'business_admin', 'accountant', 'store_manager']),
+	auth(['admin']),
 	controller.getCustomerLedger,
 );
 
 router.post(
 	'/customer/payment',
-	auth(['super_admin', 'business_admin', 'accountant']),
+	auth(['admin']),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			customerId: Joi.string().hex().length(24).required(),
 			amount: Joi.number().positive().required(),
 		}),
@@ -26,16 +25,15 @@ router.post(
 
 router.get(
 	'/supplier/:id',
-	auth(['super_admin', 'business_admin', 'accountant']),
+	auth(['admin']),
 	controller.getSupplierLedger,
 );
 
 router.post(
 	'/supplier/payment',
-	auth(['super_admin', 'business_admin', 'accountant']),
+	auth(['admin']),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			supplierId: Joi.string().hex().length(24).required(),
 			amount: Joi.number().positive().required(),
 		}),

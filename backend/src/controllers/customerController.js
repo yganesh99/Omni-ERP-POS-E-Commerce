@@ -4,7 +4,6 @@ exports.create = async (req, res, next) => {
 	try {
 		const cust = await customerService.create({
 			...req.body,
-			businessId: req.businessId,
 		});
 		res.status(201).json(cust);
 	} catch (err) {
@@ -14,10 +13,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await customerService.getByBusiness(
-			req.businessId,
-			req.query,
-		);
+		const result = await customerService.getAll(req.query);
 		res.json(result);
 	} catch (err) {
 		next(err);

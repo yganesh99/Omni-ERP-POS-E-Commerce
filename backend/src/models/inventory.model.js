@@ -2,11 +2,6 @@ const mongoose = require('mongoose');
 
 const inventorySchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		productId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Product',
@@ -32,9 +27,9 @@ inventorySchema.virtual('availableQuantity').get(function () {
 });
 
 inventorySchema.index(
-	{ businessId: 1, productId: 1, storeId: 1 },
+	{ productId: 1, storeId: 1 },
 	{ unique: true },
 );
-inventorySchema.index({ businessId: 1, storeId: 1 });
+inventorySchema.index({ storeId: 1 });
 
 module.exports = mongoose.model('Inventory', inventorySchema);

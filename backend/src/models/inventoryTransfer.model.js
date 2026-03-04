@@ -14,12 +14,6 @@ const transferItemSchema = new mongoose.Schema(
 
 const inventoryTransferSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-			index: true,
-		},
 		fromStoreId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Store',

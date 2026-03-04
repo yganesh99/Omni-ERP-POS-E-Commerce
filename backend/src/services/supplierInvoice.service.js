@@ -6,9 +6,9 @@ const PurchaseOrder = require('../models/purchaseOrder.model');
 /**
  * Create a supplier invoice (validates pricing matches PO).
  */
-async function create(businessId, data) {
+async function create(data) {
 	const po = await PurchaseOrder.findById(data.purchaseOrderId);
-	if (!po || String(po.businessId) !== String(businessId)) {
+	if (!po) {
 		throw Object.assign(new Error('PO not found'), { status: 404 });
 	}
 
@@ -34,7 +34,6 @@ async function create(businessId, data) {
 	}
 
 	return SupplierInvoice.create({
-		businessId,
 		supplierId: data.supplierId,
 		purchaseOrderId: data.purchaseOrderId,
 		invoiceNumber: data.invoiceNumber,
@@ -43,11 +42,8 @@ async function create(businessId, data) {
 	});
 }
 
-async function getByBusiness(
-	businessId,
-	{ supplierId, status, page = 1, limit = 50 } = {},
-) {
-	const query = { businessId };
+async function getAll({ supplierId, status, page = 1, limit = 50 } = {}) {
+	const query = {};
 	if (supplierId) query.supplierId = supplierId;
 	if (status) query.status = status;
 
@@ -138,7 +134,7 @@ async function removeAttachment(id, filename) {
 
 module.exports = {
 	create,
-	getByBusiness,
+	getAll,
 	getById,
 	recordPayment,
 	addAttachments,

@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-			index: true,
-		},
 		sku: { type: String, required: true, trim: true },
 		name: { type: String, required: true, trim: true },
 		description: { type: String },
@@ -23,11 +17,12 @@ const productSchema = new mongoose.Schema(
 			default: 'both',
 		},
 		isActive: { type: Boolean, default: true },
+		image: { type: String, trim: true },
 	},
 	{ timestamps: true },
 );
 
-productSchema.index({ businessId: 1, sku: 1 }, { unique: true });
-productSchema.index({ businessId: 1, name: 'text' });
+productSchema.index({ sku: 1 }, { unique: true });
+productSchema.index({ name: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

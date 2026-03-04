@@ -18,11 +18,6 @@ const invoiceItemSchema = new mongoose.Schema(
 
 const supplierInvoiceSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		supplierId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Supplier',
@@ -57,9 +52,9 @@ const supplierInvoiceSchema = new mongoose.Schema(
 );
 
 supplierInvoiceSchema.index(
-	{ businessId: 1, invoiceNumber: 1 },
+	{ invoiceNumber: 1 },
 	{ unique: true },
 );
-supplierInvoiceSchema.index({ businessId: 1, supplierId: 1 });
+supplierInvoiceSchema.index({ supplierId: 1 });
 
 module.exports = mongoose.model('SupplierInvoice', supplierInvoiceSchema);

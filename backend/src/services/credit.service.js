@@ -7,7 +7,6 @@ const { logAudit } = require('../middlewares/auditLog');
  * Record a credit sale (increases customer AR).
  */
 async function recordCreditSale(
-	businessId,
 	customerId,
 	amount,
 	orderId,
@@ -28,7 +27,6 @@ async function recordCreditSale(
 	await customer.save();
 
 	const entry = await CreditAccount.create({
-		businessId,
 		entityType: 'customer',
 		entityId: customerId,
 		entityModel: 'Customer',
@@ -41,7 +39,6 @@ async function recordCreditSale(
 	});
 
 	logAudit({
-		businessId,
 		userId,
 		action: 'credit_sale',
 		entity: 'CreditAccount',
@@ -55,7 +52,7 @@ async function recordCreditSale(
 /**
  * Record a customer payment (reduces AR).
  */
-async function recordCustomerPayment(businessId, customerId, amount, userId) {
+async function recordCustomerPayment( customerId, amount, userId) {
 	const customer = await Customer.findById(customerId);
 	if (!customer)
 		throw Object.assign(new Error('Customer not found'), { status: 404 });
@@ -64,7 +61,6 @@ async function recordCustomerPayment(businessId, customerId, amount, userId) {
 	await customer.save();
 
 	const entry = await CreditAccount.create({
-		businessId,
 		entityType: 'customer',
 		entityId: customerId,
 		entityModel: 'Customer',
@@ -76,7 +72,6 @@ async function recordCustomerPayment(businessId, customerId, amount, userId) {
 	});
 
 	logAudit({
-		businessId,
 		userId,
 		action: 'customer_payment',
 		entity: 'CreditAccount',
@@ -91,7 +86,6 @@ async function recordCustomerPayment(businessId, customerId, amount, userId) {
  * Record a customer return (reduces AR).
  */
 async function recordCustomerReturn(
-	businessId,
 	customerId,
 	amount,
 	orderId,
@@ -105,7 +99,6 @@ async function recordCustomerReturn(
 	await customer.save();
 
 	return CreditAccount.create({
-		businessId,
 		entityType: 'customer',
 		entityId: customerId,
 		entityModel: 'Customer',
@@ -122,7 +115,6 @@ async function recordCustomerReturn(
  * Record a supplier purchase (increases AP).
  */
 async function recordSupplierPurchase(
-	businessId,
 	supplierId,
 	amount,
 	purchaseOrderId,
@@ -136,7 +128,6 @@ async function recordSupplierPurchase(
 	await supplier.save();
 
 	return CreditAccount.create({
-		businessId,
 		entityType: 'supplier',
 		entityId: supplierId,
 		entityModel: 'Supplier',
@@ -152,7 +143,7 @@ async function recordSupplierPurchase(
 /**
  * Record supplier payment (reduces AP).
  */
-async function recordSupplierPayment(businessId, supplierId, amount, userId) {
+async function recordSupplierPayment( supplierId, amount, userId) {
 	const supplier = await Supplier.findById(supplierId);
 	if (!supplier)
 		throw Object.assign(new Error('Supplier not found'), { status: 404 });
@@ -161,7 +152,6 @@ async function recordSupplierPayment(businessId, supplierId, amount, userId) {
 	await supplier.save();
 
 	return CreditAccount.create({
-		businessId,
 		entityType: 'supplier',
 		entityId: supplierId,
 		entityModel: 'Supplier',
@@ -177,7 +167,6 @@ async function recordSupplierPayment(businessId, supplierId, amount, userId) {
  * Record supplier return (reduces AP).
  */
 async function recordSupplierReturn(
-	businessId,
 	supplierId,
 	amount,
 	purchaseOrderId,
@@ -191,7 +180,6 @@ async function recordSupplierReturn(
 	await supplier.save();
 
 	return CreditAccount.create({
-		businessId,
 		entityType: 'supplier',
 		entityId: supplierId,
 		entityModel: 'Supplier',
@@ -207,9 +195,8 @@ async function recordSupplierReturn(
 /**
  * Get ledger history for an entity.
  */
-async function getLedger(businessId, entityType, entityId) {
+async function getLedger( entityType, entityId) {
 	return CreditAccount.find({
-		businessId,
 		entityType,
 		entityId,
 	}).sort({ createdAt: -1 });

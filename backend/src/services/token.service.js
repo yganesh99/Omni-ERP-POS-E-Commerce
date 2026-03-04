@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 function signAccessToken(payload) {
-	// payload should include: sub, role, businessId, storeId
+	// payload should include: sub, role, storeId
 	return jwt.sign(payload, config.jwt.accessSecret, {
 		expiresIn: config.jwt.accessExp,
 	});

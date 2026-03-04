@@ -7,8 +7,8 @@ const { logAudit } = require('../middlewares/auditLog');
 /**
  * Get stock levels. Optionally filter by store and/or product.
  */
-async function getStock(businessId, { storeId, productId } = {}) {
-	const query = { businessId };
+async function getStock({ storeId, productId } = {}) {
+	const query = {};
 	if (storeId) query.storeId = storeId;
 	if (productId) query.productId = productId;
 	return Inventory.find(query)
@@ -17,10 +17,10 @@ async function getStock(businessId, { storeId, productId } = {}) {
 }
 
 /**
- * Get total available stock for a product across all stores in a business.
+ * Get total available stock for a product across all stores.
  */
-async function getTotalAvailable(businessId, productId) {
-	const records = await Inventory.find({ businessId, productId });
+async function getTotalAvailable(productId) {
+	const records = await Inventory.find({ productId });
 	return records.reduce(
 		(sum, r) => sum + (r.quantity - r.reservedQuantity),
 		0,
@@ -30,15 +30,9 @@ async function getTotalAvailable(businessId, productId) {
 /**
  * Adjust stock (manual adjustment with audit trail).
  */
-async function adjustStock(
-	businessId,
-	productId,
-	storeId,
-	quantityChange,
-	userId,
-) {
+async function adjustStock(productId, storeId, quantityChange, userId) {
 	const inv = await Inventory.findOneAndUpdate(
-		{ businessId, productId, storeId },
+		{ productId, storeId },
 		{ $inc: { quantity: quantityChange } },
 		{ new: true, upsert: true, setDefaultsOnInsert: true },
 	);
@@ -46,7 +40,7 @@ async function adjustStock(
 	if (inv.quantity < 0) {
 		// rollback
 		await Inventory.findOneAndUpdate(
-			{ businessId, productId, storeId },
+			{ productId, storeId },
 			{ $inc: { quantity: -quantityChange } },
 		);
 		const err = new Error('Adjustment would result in negative stock');
@@ -55,7 +49,6 @@ async function adjustStock(
 	}
 
 	logAudit({
-		businessId,
 		userId,
 		action: 'adjust',
 		entity: 'Inventory',
@@ -69,13 +62,7 @@ async function adjustStock(
 /**
  * Transfer stock between stores (atomic via Mongoose transaction).
  */
-async function transferStock(
-	businessId,
-	fromStoreId,
-	toStoreId,
-	items,
-	userId,
-) {
+async function transferStock(fromStoreId, toStoreId, items, userId) {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
@@ -84,7 +71,6 @@ async function transferStock(
 			// Decrement source
 			const source = await Inventory.findOneAndUpdate(
 				{
-					businessId,
 					productId: item.productId,
 					storeId: fromStoreId,
 					quantity: { $gte: item.quantity },
@@ -102,7 +88,6 @@ async function transferStock(
 			// Increment destination
 			await Inventory.findOneAndUpdate(
 				{
-					businessId,
 					productId: item.productId,
 					storeId: toStoreId,
 				},
@@ -114,7 +99,6 @@ async function transferStock(
 		const transfer = await InventoryTransfer.create(
 			[
 				{
-					businessId,
 					fromStoreId,
 					toStoreId,
 					items,
@@ -128,7 +112,6 @@ async function transferStock(
 		await session.commitTransaction();
 
 		logAudit({
-			businessId,
 			userId,
 			action: 'transfer',
 			entity: 'InventoryTransfer',
@@ -149,13 +132,7 @@ async function transferStock(
 /**
  * Soft-lock stock for ecommerce checkout.
  */
-async function lockStock(
-	businessId,
-	storeId,
-	items,
-	sessionId,
-	ttlMinutes = 15,
-) {
+async function lockStock(storeId, items, sessionId, ttlMinutes = 15) {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
@@ -164,7 +141,6 @@ async function lockStock(
 		for (const item of items) {
 			// Check available
 			const inv = await Inventory.findOne({
-				businessId,
 				productId: item.productId,
 				storeId,
 			}).session(session);
@@ -185,7 +161,6 @@ async function lockStock(
 			const lock = await StockLock.create(
 				[
 					{
-						businessId,
 						productId: item.productId,
 						storeId,
 						quantity: item.quantity,
@@ -224,7 +199,6 @@ async function releaseStock(sessionId) {
 	for (const lock of locks) {
 		await Inventory.updateOne(
 			{
-				businessId: lock.businessId,
 				productId: lock.productId,
 				storeId: lock.storeId,
 			},
@@ -254,7 +228,6 @@ async function confirmStock(sessionId) {
 			// Decrement real quantity and reserved
 			await Inventory.updateOne(
 				{
-					businessId: lock.businessId,
 					productId: lock.productId,
 					storeId: lock.storeId,
 				},
@@ -283,9 +256,9 @@ async function confirmStock(sessionId) {
 /**
  * Ensure / initialize inventory record for a product at a store.
  */
-async function ensureRecord(businessId, productId, storeId) {
+async function ensureRecord(productId, storeId) {
 	return Inventory.findOneAndUpdate(
-		{ businessId, productId, storeId },
+		{ productId, storeId },
 		{ $setOnInsert: { quantity: 0, reservedQuantity: 0 } },
 		{ upsert: true, new: true, setDefaultsOnInsert: true },
 	);
@@ -315,7 +288,6 @@ async function cleanupExpiredLocks() {
 		try {
 			await Inventory.updateOne(
 				{
-					businessId: lock.businessId,
 					productId: lock.productId,
 					storeId: lock.storeId,
 				},

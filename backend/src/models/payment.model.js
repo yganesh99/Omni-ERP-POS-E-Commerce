@@ -2,11 +2,6 @@ const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		entityType: {
 			type: String,
 			enum: ['customer', 'supplier'],
@@ -47,7 +42,7 @@ const paymentSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-paymentSchema.index({ businessId: 1, entityType: 1, entityId: 1 });
-paymentSchema.index({ businessId: 1, createdAt: -1 });
+paymentSchema.index({ entityType: 1, entityId: 1 });
+paymentSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

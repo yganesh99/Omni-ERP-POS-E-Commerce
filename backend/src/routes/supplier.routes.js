@@ -2,31 +2,28 @@ const express = require('express');
 const { celebrate, Joi, Segments } = require('celebrate');
 const controller = require('../controllers/supplierController');
 const auth = require('../middlewares/auth');
-const businessContext = require('../middlewares/businessContext');
 
 const router = express.Router({ mergeParams: true });
 
-router.use(
-	auth(['super_admin', 'business_admin', 'inventory_manager', 'accountant']),
-	businessContext,
-);
+router.use(auth(['admin']));
 
 router.post(
 	'/',
 	celebrate({
 		[Segments.BODY]: Joi.object({
 			name: Joi.string().required(),
-			contactPerson: Joi.string().optional(),
-			email: Joi.string().email().optional(),
-			phone: Joi.string().optional(),
+			contactPerson: Joi.string().allow('').optional(),
+			email: Joi.string().email().allow('').optional(),
+			phone: Joi.string().allow('').optional(),
 			address: Joi.object({
-				street: Joi.string(),
-				city: Joi.string(),
-				state: Joi.string(),
-				zip: Joi.string(),
-				country: Joi.string(),
+				street: Joi.string().allow(''),
+				city: Joi.string().allow(''),
+				state: Joi.string().allow(''),
+				zip: Joi.string().allow(''),
+				country: Joi.string().allow(''),
 			}).optional(),
 			leadTimeDays: Joi.number().integer().min(0).optional(),
+			isActive: Joi.boolean().optional(),
 		}),
 	}),
 	controller.create,
@@ -39,18 +36,19 @@ router.put(
 	'/:id',
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			name: Joi.string(),
-			contactPerson: Joi.string(),
-			email: Joi.string().email(),
-			phone: Joi.string(),
+			name: Joi.string().allow(''),
+			contactPerson: Joi.string().allow(''),
+			email: Joi.string().email().allow(''),
+			phone: Joi.string().allow(''),
 			address: Joi.object({
-				street: Joi.string(),
-				city: Joi.string(),
-				state: Joi.string(),
-				zip: Joi.string(),
-				country: Joi.string(),
+				street: Joi.string().allow(''),
+				city: Joi.string().allow(''),
+				state: Joi.string().allow(''),
+				zip: Joi.string().allow(''),
+				country: Joi.string().allow(''),
 			}),
 			leadTimeDays: Joi.number().integer().min(0),
+			isActive: Joi.boolean(),
 		}),
 	}),
 	controller.update,

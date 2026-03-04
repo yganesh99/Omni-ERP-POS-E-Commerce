@@ -18,10 +18,9 @@ const orderItemSchema = Joi.object({
 
 router.post(
 	'/order',
-	auth(['super_admin', 'business_admin', 'store_manager', 'cashier']),
+	auth(['admin', 'cashier']),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			storeId: Joi.string().hex().length(24).required(),
 			customerId: Joi.string().hex().length(24).optional().allow(null),
 			items: Joi.array().items(orderItemSchema).min(1).required(),
@@ -37,10 +36,9 @@ router.post(
 
 router.post(
 	'/refund',
-	auth(['super_admin', 'business_admin', 'store_manager', 'cashier']),
+	auth(['admin']),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			orderId: Joi.string().hex().length(24).required(),
 			items: Joi.array()
 				.items(

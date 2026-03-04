@@ -4,7 +4,6 @@ exports.create = async (req, res, next) => {
 	try {
 		const tax = await taxService.create({
 			...req.body,
-			businessId: req.businessId,
 		});
 		res.status(201).json(tax);
 	} catch (err) {
@@ -14,7 +13,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const list = await taxService.getByBusiness(req.businessId);
+		const list = await taxService.getAll();
 		res.json(list);
 	} catch (err) {
 		next(err);

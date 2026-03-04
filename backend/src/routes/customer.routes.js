@@ -2,34 +2,24 @@ const express = require('express');
 const { celebrate, Joi, Segments } = require('celebrate');
 const controller = require('../controllers/customerController');
 const auth = require('../middlewares/auth');
-const businessContext = require('../middlewares/businessContext');
 
 const router = express.Router({ mergeParams: true });
 
-router.use(
-	auth([
-		'super_admin',
-		'business_admin',
-		'store_manager',
-		'accountant',
-		'cashier',
-	]),
-	businessContext,
-);
+router.use(auth(['admin', 'admin', 'store_manager', 'accountant', 'cashier']));
 
 router.post(
 	'/',
 	celebrate({
 		[Segments.BODY]: Joi.object({
 			name: Joi.string().required(),
-			email: Joi.string().email().optional(),
-			phone: Joi.string().optional(),
+			email: Joi.string().email().allow('').optional(),
+			phone: Joi.string().allow('').optional(),
 			address: Joi.object({
-				street: Joi.string(),
-				city: Joi.string(),
-				state: Joi.string(),
-				zip: Joi.string(),
-				country: Joi.string(),
+				street: Joi.string().allow(''),
+				city: Joi.string().allow(''),
+				state: Joi.string().allow(''),
+				zip: Joi.string().allow(''),
+				country: Joi.string().allow(''),
 			}).optional(),
 			creditLimit: Joi.number().min(0).optional(),
 		}),
@@ -44,15 +34,15 @@ router.put(
 	'/:id',
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			name: Joi.string(),
-			email: Joi.string().email(),
-			phone: Joi.string(),
+			name: Joi.string().allow(''),
+			email: Joi.string().email().allow(''),
+			phone: Joi.string().allow(''),
 			address: Joi.object({
-				street: Joi.string(),
-				city: Joi.string(),
-				state: Joi.string(),
-				zip: Joi.string(),
-				country: Joi.string(),
+				street: Joi.string().allow(''),
+				city: Joi.string().allow(''),
+				state: Joi.string().allow(''),
+				zip: Joi.string().allow(''),
+				country: Joi.string().allow(''),
 			}),
 			creditLimit: Joi.number().min(0),
 		}),

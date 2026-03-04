@@ -9,7 +9,7 @@ function generatePONumber() {
 	return `PO-${ts}-${rand}`;
 }
 
-async function create(businessId, data, userId) {
+async function create(data, userId) {
 	let totalAmount = 0;
 	const items = data.items.map((item) => {
 		const lineTotal = item.orderedQty * item.unitPrice;
@@ -18,7 +18,6 @@ async function create(businessId, data, userId) {
 	});
 
 	return PurchaseOrder.create({
-		businessId,
 		supplierId: data.supplierId,
 		storeId: data.storeId,
 		poNumber: generatePONumber(),
@@ -30,11 +29,8 @@ async function create(businessId, data, userId) {
 	});
 }
 
-async function getByBusiness(
-	businessId,
-	{ status, supplierId, page = 1, limit = 50 } = {},
-) {
-	const query = { businessId };
+async function getAll({ status, supplierId, page = 1, limit = 50 } = {}) {
+	const query = {};
 	if (status) query.status = status;
 	if (supplierId) query.supplierId = supplierId;
 
@@ -111,7 +107,6 @@ async function receiveDelivery(id, receivedItems, userId) {
 			// Add to inventory
 			await Inventory.findOneAndUpdate(
 				{
-					businessId: po.businessId,
 					productId: recv.productId,
 					storeId: po.storeId,
 				},
@@ -130,7 +125,6 @@ async function receiveDelivery(id, receivedItems, userId) {
 		await session.commitTransaction();
 
 		logAudit({
-			businessId: po.businessId,
 			userId,
 			action: 'po_receive',
 			entity: 'PurchaseOrder',
@@ -157,7 +151,7 @@ async function cancel(id) {
 
 module.exports = {
 	create,
-	getByBusiness,
+	getAll,
 	getById,
 	approve,
 	markSent,

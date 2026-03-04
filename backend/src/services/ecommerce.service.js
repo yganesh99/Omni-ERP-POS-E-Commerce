@@ -15,7 +15,6 @@ function generateOrderNumber() {
  * Ecommerce checkout: soft-lock stock & create pending order.
  */
 async function checkout(
-	businessId,
 	storeId,
 	{ customerId, items, sessionId },
 	ttlMinutes = 15,
@@ -27,7 +26,7 @@ async function checkout(
 
 	for (const item of items) {
 		const product = await Product.findById(item.productId);
-		if (!product || String(product.businessId) !== String(businessId)) {
+		if (!product) {
 			throw Object.assign(
 				new Error(`Product ${item.productId} not found`),
 				{ status: 404 },
@@ -60,17 +59,10 @@ async function checkout(
 	}
 
 	// Lock stock
-	await inventoryService.lockStock(
-		businessId,
-		storeId,
-		items,
-		sessionId,
-		ttlMinutes,
-	);
+	await inventoryService.lockStock(storeId, items, sessionId, ttlMinutes);
 
 	// Create pending order
 	const order = await Order.create({
-		businessId,
 		storeId,
 		customerId: customerId || null,
 		orderNumber: generateOrderNumber(),
@@ -107,7 +99,6 @@ async function confirmPayment(orderId, { paymentMethod, payments }) {
 	await order.save();
 
 	logAudit({
-		businessId: order.businessId,
 		userId: null,
 		action: 'ecommerce_confirm',
 		entity: 'Order',
@@ -132,14 +123,9 @@ async function assignStore(orderId, storeId) {
 /**
  * Process ecommerce return at a store.
  */
-async function processReturn(
-	businessId,
-	orderId,
-	{ items, storeId, reason },
-	userId,
-) {
+async function processReturn(orderId, { items, storeId, reason }, userId) {
 	const order = await Order.findById(orderId);
-	if (!order || String(order.businessId) !== String(businessId)) {
+	if (!order) {
 		throw Object.assign(new Error('Order not found'), { status: 404 });
 	}
 
@@ -161,7 +147,6 @@ async function processReturn(
 
 			// Restock at the return store
 			await inventoryService.adjustStock(
-				businessId,
 				item.productId,
 				storeId,
 				item.quantity,
@@ -174,7 +159,6 @@ async function processReturn(
 		// Update credit if needed
 		if (order.customerId && order.creditUsed > 0) {
 			await creditService.recordCustomerReturn(
-				businessId,
 				order.customerId,
 				returnTotal,
 				orderId,
@@ -185,7 +169,6 @@ async function processReturn(
 		await session.commitTransaction();
 
 		logAudit({
-			businessId,
 			userId,
 			action: 'ecommerce_return',
 			entity: 'Order',

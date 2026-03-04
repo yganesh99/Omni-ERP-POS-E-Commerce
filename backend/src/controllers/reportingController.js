@@ -4,7 +4,6 @@ const auditLogService = require('../services/auditLog.service');
 exports.salesByStore = async (req, res, next) => {
 	try {
 		const data = await reportingService.salesByStore(
-			req.businessId,
 			req.query,
 		);
 		res.json(data);
@@ -16,7 +15,6 @@ exports.salesByStore = async (req, res, next) => {
 exports.salesByProduct = async (req, res, next) => {
 	try {
 		const data = await reportingService.salesByProduct(
-			req.businessId,
 			req.query,
 		);
 		res.json(data);
@@ -28,7 +26,6 @@ exports.salesByProduct = async (req, res, next) => {
 exports.salesByCashier = async (req, res, next) => {
 	try {
 		const data = await reportingService.salesByCashier(
-			req.businessId,
 			req.query,
 		);
 		res.json(data);
@@ -40,7 +37,7 @@ exports.salesByCashier = async (req, res, next) => {
 exports.lowStock = async (req, res, next) => {
 	try {
 		const data = await reportingService.lowStock(
-			req.businessId,
+			req.
 			parseInt(req.query.threshold) || 10,
 		);
 		res.json(data);
@@ -51,7 +48,7 @@ exports.lowStock = async (req, res, next) => {
 
 exports.inventoryValuation = async (req, res, next) => {
 	try {
-		const data = await reportingService.inventoryValuation(req.businessId);
+		const data = await reportingService.inventoryValuation();
 		res.json(data);
 	} catch (err) {
 		next(err);
@@ -61,8 +58,7 @@ exports.inventoryValuation = async (req, res, next) => {
 exports.creditExposure = async (req, res, next) => {
 	try {
 		const data = await reportingService.customerCreditExposure(
-			req.businessId,
-		);
+			);
 		res.json(data);
 	} catch (err) {
 		next(err);
@@ -71,7 +67,7 @@ exports.creditExposure = async (req, res, next) => {
 
 exports.supplierPayables = async (req, res, next) => {
 	try {
-		const data = await reportingService.supplierPayables(req.businessId);
+		const data = await reportingService.supplierPayables();
 		res.json(data);
 	} catch (err) {
 		next(err);
@@ -81,7 +77,6 @@ exports.supplierPayables = async (req, res, next) => {
 exports.profitPerSku = async (req, res, next) => {
 	try {
 		const data = await reportingService.profitPerSku(
-			req.businessId,
 			req.query,
 		);
 		res.json(data);
@@ -92,8 +87,7 @@ exports.profitPerSku = async (req, res, next) => {
 
 exports.auditLogs = async (req, res, next) => {
 	try {
-		const data = await auditLogService.getByBusiness(
-			req.businessId,
+		const data = await auditLogService.getAll(
 			req.query,
 		);
 		res.json(data);

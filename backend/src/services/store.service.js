@@ -4,8 +4,8 @@ async function create(data) {
 	return Store.create(data);
 }
 
-async function getByBusiness(businessId) {
-	return Store.find({ businessId, isActive: true }).sort({ name: 1 });
+async function getAll() {
+	return Store.find({ isActive: true }).sort({ name: 1 });
 }
 
 async function getById(id) {
@@ -26,4 +26,4 @@ async function toggleActive(id) {
 	return store.save();
 }
 
-module.exports = { create, getByBusiness, getById, update, toggleActive };
+module.exports = { create, getAll, getById, update, toggleActive };

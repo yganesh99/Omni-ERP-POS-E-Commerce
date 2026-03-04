@@ -2,13 +2,11 @@ const express = require('express');
 const { celebrate, Joi, Segments } = require('celebrate');
 const controller = require('../controllers/purchaseOrderController');
 const auth = require('../middlewares/auth');
-const businessContext = require('../middlewares/businessContext');
 
 const router = express.Router({ mergeParams: true });
 
 router.use(
-	auth(['super_admin', 'business_admin', 'inventory_manager', 'accountant']),
-	businessContext,
+	auth(['admin']),
 );
 
 router.post(

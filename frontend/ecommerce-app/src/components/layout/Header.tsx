@@ -9,12 +9,23 @@ import {
 	Menu,
 	X,
 	ChevronLeft,
+	LogOut,
+	Package,
+	Heart as HeartIcon,
+	UserCircle,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
 	const [drawerOpen, setDrawerOpen] = useState(false);
-	const [activeMenu, setActiveMenu] = useState('main'); // 'main' | 'a-d'
+	const [activeMenu, setActiveMenu] = useState('main');
+	const [dropdownOpen, setDropdownOpen] = useState(false);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	const { user, logout } = useAuth();
+	const router = useRouter();
 
 	// Prevent body scroll when drawer is open
 	useEffect(() => {
@@ -27,6 +38,27 @@ export function Header() {
 			document.body.style.overflow = 'unset';
 		};
 	}, [drawerOpen]);
+
+	// Close dropdown on outside click
+	useEffect(() => {
+		function handleClickOutside(e: MouseEvent) {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(e.target as Node)
+			) {
+				setDropdownOpen(false);
+			}
+		}
+		document.addEventListener('mousedown', handleClickOutside);
+		return () =>
+			document.removeEventListener('mousedown', handleClickOutside);
+	}, []);
+
+	function handleLogout() {
+		logout();
+		setDropdownOpen(false);
+		router.push('/');
+	}
 
 	return (
 		<>
@@ -61,44 +93,94 @@ export function Header() {
 
 					{/* Action Icons */}
 					<div className='flex items-center space-x-6'>
-						<div className='relative group'>
+						{/* User Icon — conditional */}
+						{user ? (
+							/* ── Logged in: show avatar + dropdown ── */
+							<div
+								className='relative'
+								ref={dropdownRef}
+							>
+								<button
+									onClick={() =>
+										setDropdownOpen(!dropdownOpen)
+									}
+									className='hover:text-brand-red transition-colors flex items-center gap-1.5 p-2 -m-2'
+									aria-label='Account menu'
+								>
+									<div className='w-7 h-7 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-bold uppercase select-none'>
+										{(user.name || user.email)
+											.charAt(0)
+											.toUpperCase()}
+									</div>
+								</button>
+
+								{/* Dropdown */}
+								{dropdownOpen && (
+									<div className='absolute right-0 top-full mt-3 w-52 bg-white shadow-xl border border-zinc-100 rounded-md py-2 flex flex-col z-50 animate-in fade-in slide-in-from-top-2 duration-150'>
+										{/* User info */}
+										<div className='px-4 py-3 border-b border-zinc-100'>
+											<p className='text-[13px] font-bold text-zinc-900 truncate'>
+												{user.name || 'Account'}
+											</p>
+											<p className='text-[11px] text-zinc-500 truncate'>
+												{user.email}
+											</p>
+										</div>
+
+										<Link
+											href='/profile'
+											onClick={() =>
+												setDropdownOpen(false)
+											}
+											className='px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700 flex items-center gap-2.5'
+										>
+											<UserCircle className='w-4 h-4' />
+											Profile
+										</Link>
+										<Link
+											href='/orders'
+											onClick={() =>
+												setDropdownOpen(false)
+											}
+											className='px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700 flex items-center gap-2.5'
+										>
+											<Package className='w-4 h-4' />
+											Orders
+										</Link>
+										<Link
+											href='/wishlist'
+											onClick={() =>
+												setDropdownOpen(false)
+											}
+											className='px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700 flex items-center gap-2.5'
+										>
+											<HeartIcon className='w-4 h-4' />
+											Wishlist
+										</Link>
+
+										<div className='h-px bg-zinc-100 my-1'></div>
+
+										<button
+											onClick={handleLogout}
+											className='px-4 py-2.5 text-sm font-medium hover:bg-red-50 text-red-600 transition-colors flex items-center gap-2.5 w-full text-left'
+										>
+											<LogOut className='w-4 h-4' />
+											Logout
+										</button>
+									</div>
+								)}
+							</div>
+						) : (
+							/* ── Not logged in: plain link to /login ── */
 							<Link
 								href='/login'
 								className='hover:text-brand-red transition-colors flex items-center p-2 -m-2'
+								aria-label='Sign in'
 							>
 								<User className='w-5 h-5' />
 							</Link>
-							{/* Dropdown Menu */}
-							<div className='absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 w-48'>
-								<div className='bg-white shadow-lg border border-zinc-100 rounded-md py-2 flex flex-col'>
-									<Link
-										href='/profile'
-										className='px-4 py-2 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700'
-									>
-										Profile
-									</Link>
-									<Link
-										href='/orders'
-										className='px-4 py-2 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700'
-									>
-										Orders
-									</Link>
-									<Link
-										href='/wishlist'
-										className='px-4 py-2 text-sm font-medium hover:bg-zinc-50 hover:text-brand-red transition-colors text-zinc-700'
-									>
-										Wishlist
-									</Link>
-									<div className='h-px bg-zinc-100 my-1'></div>
-									<Link
-										href='/login'
-										className='px-4 py-2 text-sm font-medium hover:bg-zinc-50 text-red-600 transition-colors'
-									>
-										Logout
-									</Link>
-								</div>
-							</div>
-						</div>
+						)}
+
 						<Link
 							href='/wishlist'
 							className='hover:text-brand-red transition-colors'
@@ -217,7 +299,7 @@ export function Header() {
 												Fabrics A-D
 											</button>
 											<button className='w-full text-left px-6 py-4 bg-zinc-100/60 hover:bg-zinc-200/60 font-bold text-[15px] text-zinc-800 rounded-sm transition-colors'>
-												Fabrics A-D
+												Fabrics E-O
 											</button>
 											<button className='w-full text-left px-6 py-4 bg-zinc-100/60 hover:bg-zinc-200/60 font-bold text-[15px] text-zinc-800 rounded-sm transition-colors'>
 												Fabrics P-Z

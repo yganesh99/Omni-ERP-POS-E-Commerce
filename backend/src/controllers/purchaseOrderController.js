@@ -2,11 +2,7 @@ const poService = require('../services/purchaseOrder.service');
 
 exports.create = async (req, res, next) => {
 	try {
-		const po = await poService.create(
-			req.businessId,
-			req.body,
-			req.user.id,
-		);
+		const po = await poService.create(req.body, req.user.id);
 		res.status(201).json(po);
 	} catch (err) {
 		next(err);
@@ -15,7 +11,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await poService.getByBusiness(req.businessId, req.query);
+		const result = await poService.getAll(req.query);
 		res.json(result);
 	} catch (err) {
 		next(err);

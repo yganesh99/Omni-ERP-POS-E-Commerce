@@ -13,8 +13,8 @@ const itemSchema = Joi.object({
 router.get(
 	'/',
 	auth([
-		'super_admin',
-		'business_admin',
+		'admin',
+		'admin',
 		'store_manager',
 		'inventory_manager',
 	]),
@@ -23,10 +23,9 @@ router.get(
 
 router.post(
 	'/adjust',
-	auth(['super_admin', 'business_admin', 'inventory_manager']),
+	auth(['admin']),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			productId: Joi.string().hex().length(24).required(),
 			storeId: Joi.string().hex().length(24).required(),
 			quantityChange: Joi.number().integer().required(),
@@ -38,14 +37,13 @@ router.post(
 router.post(
 	'/transfer',
 	auth([
-		'super_admin',
-		'business_admin',
+		'admin',
+		'admin',
 		'store_manager',
 		'inventory_manager',
 	]),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			fromStoreId: Joi.string().hex().length(24).required(),
 			toStoreId: Joi.string().hex().length(24).required(),
 			items: Joi.array().items(itemSchema).min(1).required(),
@@ -59,7 +57,6 @@ router.post(
 	auth(),
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			businessId: Joi.string().hex().length(24).required(),
 			storeId: Joi.string().hex().length(24).required(),
 			items: Joi.array().items(itemSchema).min(1).required(),
 			sessionId: Joi.string().required(),

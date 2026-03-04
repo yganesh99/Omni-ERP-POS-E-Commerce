@@ -2,11 +2,10 @@ const express = require('express');
 const { celebrate, Joi, Segments } = require('celebrate');
 const controller = require('../controllers/userController');
 const auth = require('../middlewares/auth');
-const businessContext = require('../middlewares/businessContext');
 
 const router = express.Router({ mergeParams: true });
 
-router.use(auth(['super_admin', 'business_admin']), businessContext);
+router.use(auth(['admin']));
 
 router.post(
 	'/',
@@ -15,10 +14,10 @@ router.post(
 			email: Joi.string().email().required(),
 			password: Joi.string().min(8).required(),
 			name: Joi.string().required(),
-			phone: Joi.string().optional(),
+			phone: Joi.string().allow('').optional(),
 			role: Joi.string()
 				.valid(
-					'business_admin',
+					// 'admin',
 					'store_manager',
 					'inventory_manager',
 					'accountant',
@@ -38,10 +37,10 @@ router.put(
 	'/:id',
 	celebrate({
 		[Segments.BODY]: Joi.object({
-			name: Joi.string(),
-			phone: Joi.string(),
+			name: Joi.string().allow(''),
+			phone: Joi.string().allow(''),
 			role: Joi.string().valid(
-				'business_admin',
+				'admin',
 				'store_manager',
 				'inventory_manager',
 				'accountant',

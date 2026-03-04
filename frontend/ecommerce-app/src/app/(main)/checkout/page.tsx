@@ -2,10 +2,30 @@
 
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
+	const { user, loading } = useAuth();
+	const router = useRouter();
 	const [shippingMethod, setShippingMethod] = useState('colombo');
+
+	// Auth guard — redirect to login if not authenticated
+	useEffect(() => {
+		if (!loading && !user) {
+			router.replace('/login?callbackUrl=/checkout');
+		}
+	}, [user, loading, router]);
+
+	// Show nothing while checking auth
+	if (loading || !user) {
+		return (
+			<div className='min-h-[60vh] flex items-center justify-center'>
+				<div className='w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin' />
+			</div>
+		);
+	}
 
 	return (
 		<div className='container mx-auto px-4 py-8 mb-16 max-w-[1100px] min-h-[60vh]'>
@@ -44,17 +64,10 @@ export default function CheckoutPage() {
 							</label>
 							<input
 								type='email'
-								className='w-full border border-zinc-300 rounded-sm px-4 py-2.5 outline-none focus:border-zinc-500 transition-colors'
+								defaultValue={user.email}
+								readOnly
+								className='w-full border border-zinc-300 rounded-sm px-4 py-2.5 outline-none bg-zinc-50 text-zinc-700 focus:border-zinc-500 transition-colors'
 							/>
-							<p className='text-[11px] text-zinc-600 font-bold mt-1'>
-								Already has an account?{' '}
-								<Link
-									href='/login'
-									className='text-brand-red hover:underline'
-								>
-									Sign in
-								</Link>
-							</p>
 						</div>
 					</div>
 

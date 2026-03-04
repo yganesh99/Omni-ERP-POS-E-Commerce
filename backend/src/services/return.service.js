@@ -4,11 +4,10 @@ async function create(data) {
 	return Return.create(data);
 }
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ type, status, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId };
+	const query = {};
 	if (type) query.type = type;
 	if (status) query.status = status;
 
@@ -28,4 +27,4 @@ async function updateStatus(id, status) {
 	return Return.findByIdAndUpdate(id, { status }, { new: true });
 }
 
-module.exports = { create, getByBusiness, getById, updateStatus };
+module.exports = { create, getAll, getById, updateStatus };

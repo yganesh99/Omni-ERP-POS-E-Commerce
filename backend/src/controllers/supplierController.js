@@ -4,7 +4,6 @@ exports.create = async (req, res, next) => {
 	try {
 		const supplier = await supplierService.create({
 			...req.body,
-			businessId: req.businessId,
 		});
 		res.status(201).json(supplier);
 	} catch (err) {
@@ -14,10 +13,7 @@ exports.create = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await supplierService.getByBusiness(
-			req.businessId,
-			req.query,
-		);
+		const result = await supplierService.getAll(req.query);
 		res.json(result);
 	} catch (err) {
 		next(err);

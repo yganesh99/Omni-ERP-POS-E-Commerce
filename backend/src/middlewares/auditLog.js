@@ -3,8 +3,7 @@ const AuditLog = require('../models/auditLog.model');
 /**
  * Fire-and-forget audit logger.
  * @param {Object} params
- * @param {string} params.businessId
- * @param {string} params.userId
+  * @param {string} params.userId
  * @param {string} params.action - e.g. 'create', 'update', 'delete', 'adjust'
  * @param {string} params.entity - e.g. 'Product', 'Inventory', 'CreditAccount'
  * @param {string} params.entityId
@@ -12,7 +11,6 @@ const AuditLog = require('../models/auditLog.model');
  * @param {string} [params.ipAddress]
  */
 async function logAudit({
-	businessId,
 	userId,
 	action,
 	entity,
@@ -22,7 +20,6 @@ async function logAudit({
 }) {
 	try {
 		await AuditLog.create({
-			businessId,
 			userId,
 			action,
 			entity,

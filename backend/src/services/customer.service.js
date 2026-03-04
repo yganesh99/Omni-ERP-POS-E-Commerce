@@ -4,11 +4,10 @@ async function create(data) {
 	return Customer.create(data);
 }
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ search, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId, isActive: true };
+	const query = { isActive: true };
 	if (search) {
 		query.$or = [
 			{ name: { $regex: search, $options: 'i' } },
@@ -45,4 +44,4 @@ async function checkCredit(customerId, amount) {
 	return customer.creditLimit - customer.currentBalance >= amount;
 }
 
-module.exports = { create, getByBusiness, getById, update, checkCredit };
+module.exports = { create, getAll, getById, update, checkCredit };

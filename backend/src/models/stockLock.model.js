@@ -2,11 +2,6 @@ const mongoose = require('mongoose');
 
 const stockLockSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		productId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Product',
@@ -31,6 +26,6 @@ const stockLockSchema = new mongoose.Schema(
 
 // TTL index: MongoDB automatically removes docs after expiresAt
 stockLockSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-stockLockSchema.index({ businessId: 1, sessionId: 1 });
+stockLockSchema.index({ sessionId: 1 });
 
 module.exports = mongoose.model('StockLock', stockLockSchema);

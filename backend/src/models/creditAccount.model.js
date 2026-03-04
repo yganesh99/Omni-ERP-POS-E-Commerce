@@ -13,11 +13,6 @@ const ENTRY_TYPES = [
 
 const creditAccountSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		entityType: {
 			type: String,
 			enum: ENTITY_TYPES,
@@ -60,7 +55,7 @@ const creditAccountSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-creditAccountSchema.index({ businessId: 1, entityType: 1, entityId: 1 });
-creditAccountSchema.index({ businessId: 1, createdAt: -1 });
+creditAccountSchema.index({ entityType: 1, entityId: 1 });
+creditAccountSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('CreditAccount', creditAccountSchema);

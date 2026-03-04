@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 
 const storeSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-			index: true,
-		},
 		name: { type: String, required: true, trim: true },
 		code: { type: String, required: true, trim: true },
 		address: {
@@ -23,6 +17,6 @@ const storeSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-storeSchema.index({ businessId: 1, code: 1 }, { unique: true });
+storeSchema.index({ code: 1 }, { unique: true });
 
 module.exports = mongoose.model('Store', storeSchema);

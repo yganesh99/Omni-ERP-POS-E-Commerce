@@ -1,0 +1,68 @@
+import { Product } from './store';
+
+export const MOCK_PRODUCTS: Product[] = [
+	{
+		id: 'p1',
+		name: 'Classic White T-Shirt',
+		price: 19.99,
+		image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000001',
+		category: 'Clothing',
+	},
+	{
+		id: 'p2',
+		name: 'Denim Jeans',
+		price: 49.99,
+		image: 'https://images.unsplash.com/photo-1542272604-780c9685b5bf?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000002',
+		category: 'Clothing',
+	},
+	{
+		id: 'p3',
+		name: 'Leather Wallet',
+		price: 29.99,
+		image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000003',
+		category: 'Accessories',
+	},
+	{
+		id: 'p4',
+		name: 'Running Shoes',
+		price: 89.99,
+		image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000004',
+		category: 'Footwear',
+	},
+	{
+		id: 'p5',
+		name: 'Sunglasses',
+		price: 15.99,
+		image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000005',
+		category: 'Accessories',
+	},
+	{
+		id: 'p6',
+		name: 'Cotton Socks (3-Pack)',
+		price: 9.99,
+		image: 'https://images.unsplash.com/photo-1582966772680-860e372bb558?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000006',
+		category: 'Clothing',
+	},
+	{
+		id: 'p7',
+		name: 'Wrist Watch',
+		price: 120.0,
+		image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000007',
+		category: 'Accessories',
+	},
+	{
+		id: 'p8',
+		name: 'Backpack',
+		price: 39.99,
+		image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80',
+		barcode: '100000000008',
+		category: 'Accessories',
+	},
+];

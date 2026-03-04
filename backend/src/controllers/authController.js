@@ -3,7 +3,7 @@ const tokenService = require('../services/token.service');
 
 exports.register = async (req, res, next) => {
 	try {
-		const { email, password, name, role, businessId, storeId } = req.body;
+		const { email, password, name, role, storeId } = req.body;
 		const existing = await User.findOne({ email });
 		if (existing)
 			return res.status(409).json({ message: 'Email already in use' });
@@ -12,7 +12,6 @@ exports.register = async (req, res, next) => {
 			password,
 			name,
 			role,
-			businessId,
 			storeId,
 		});
 		await user.save();
@@ -39,7 +38,6 @@ exports.login = async (req, res, next) => {
 		const accessToken = tokenService.signAccessToken({
 			sub: user._id,
 			role: user.role,
-			businessId: user.businessId,
 			storeId: user.storeId,
 		});
 		const refreshToken = tokenService.signRefreshToken({ sub: user._id });
@@ -56,7 +54,6 @@ exports.googleCallback = async (req, res, next) => {
 		const accessToken = tokenService.signAccessToken({
 			sub: user._id,
 			role: user.role,
-			businessId: user.businessId,
 			storeId: user.storeId,
 		});
 		const refreshToken = tokenService.signRefreshToken({ sub: user._id });
@@ -75,16 +72,23 @@ exports.refresh = async (req, res, next) => {
 		const { refreshToken } = req.body;
 		if (!refreshToken)
 			return res.status(400).send({ message: 'Missing token' });
-		const payload = tokenService.verifyRefreshToken(refreshToken);
 
-		// Re-fetch user to get current role/business context
+		let payload;
+		try {
+			payload = tokenService.verifyRefreshToken(refreshToken);
+		} catch (jwtErr) {
+			return res
+				.status(401)
+				.json({ message: 'Invalid or expired refresh token' });
+		}
+
+		// Re-fetch user to get current role
 		const user = await User.findById(payload.sub);
 		if (!user) return res.status(401).json({ message: 'User not found' });
 
 		const accessToken = tokenService.signAccessToken({
 			sub: user._id,
 			role: user.role,
-			businessId: user.businessId,
 			storeId: user.storeId,
 		});
 		res.json({ accessToken });
@@ -95,9 +99,10 @@ exports.refresh = async (req, res, next) => {
 
 exports.me = async (req, res, next) => {
 	try {
-		const user = await User.findById(req.user.id)
-			.populate('businessId', 'name slug')
-			.populate('storeId', 'name code');
+		const user = await User.findById(req.user.id).populate(
+			'storeId',
+			'name code',
+		);
 		if (!user) return res.status(404).json({ message: 'User not found' });
 		res.json(user);
 	} catch (err) {

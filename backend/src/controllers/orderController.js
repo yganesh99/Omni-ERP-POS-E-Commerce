@@ -2,8 +2,7 @@ const orderService = require('../services/order.service');
 
 exports.getAll = async (req, res, next) => {
 	try {
-		const result = await orderService.getByBusiness(
-			req.businessId,
+		const result = await orderService.getAll(
 			req.query,
 		);
 		res.json(result);

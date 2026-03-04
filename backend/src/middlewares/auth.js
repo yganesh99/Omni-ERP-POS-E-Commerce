@@ -17,7 +17,6 @@ module.exports =
 			req.user = {
 				id: payload.sub,
 				role: payload.role || null,
-				businessId: payload.businessId || null,
 				storeId: payload.storeId || null,
 			};
 			if (
@@ -27,23 +26,9 @@ module.exports =
 				return res.status(403).json({ message: 'Forbidden' });
 			}
 
-			// Tenant isolation: non-super-admin must match business context
-			if (req.user.role !== 'super_admin') {
-				const requestedBusiness =
-					req.params.businessId || req.headers['x-business-id'];
-				if (
-					requestedBusiness &&
-					req.user.businessId &&
-					requestedBusiness !== String(req.user.businessId)
-				) {
-					return res
-						.status(403)
-						.json({ message: 'Cross-business access denied' });
-				}
-			}
-
 			next();
 		} catch (err) {
+			console.log(err);
 			return res.status(401).json({ message: 'Invalid token' });
 		}
 	};

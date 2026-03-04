@@ -1,9 +1,47 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginPage() {
+	const { login } = useAuth();
+	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [error, setError] = useState('');
+	const [loading, setLoading] = useState(false);
+
+	async function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		setError('');
+		setLoading(true);
+		try {
+			await login(email, password);
+			const callbackUrl = searchParams.get('callbackUrl') || '/';
+			router.push(callbackUrl);
+		} catch (err: unknown) {
+			setError(
+				err instanceof Error ? err.message : 'Something went wrong',
+			);
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	function handleGoogleSignIn() {
+		const apiBase =
+			process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+		window.location.href = `${apiBase}/auth/google`;
+	}
+
 	return (
 		<div className='flex min-h-screen w-full bg-white'>
 			{/* Left side cover placeholder */}
@@ -32,8 +70,10 @@ export default function LoginPage() {
 
 					<div className='space-y-6'>
 						<Button
+							type='button'
 							variant='outline'
 							className='w-full py-6 font-semibold flex items-center justify-center gap-2'
+							onClick={handleGoogleSignIn}
 						>
 							<svg
 								width='20'
@@ -73,7 +113,10 @@ export default function LoginPage() {
 							</div>
 						</div>
 
-						<form className='space-y-4'>
+						<form
+							className='space-y-4'
+							onSubmit={handleSubmit}
+						>
 							<div className='space-y-1.5'>
 								<label className='text-sm font-semibold text-zinc-900 block'>
 									Email
@@ -82,6 +125,10 @@ export default function LoginPage() {
 									type='email'
 									placeholder='Enter your email'
 									className='py-5'
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									required
+									autoComplete='email'
 								/>
 							</div>
 
@@ -91,46 +138,76 @@ export default function LoginPage() {
 								</label>
 								<div className='relative'>
 									<Input
-										type='password'
+										type={
+											showPassword ? 'text' : 'password'
+										}
 										placeholder='Enter your password'
 										className='py-5'
+										value={password}
+										onChange={(e) =>
+											setPassword(e.target.value)
+										}
+										required
+										autoComplete='current-password'
 									/>
 									<button
 										type='button'
-										className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500'
+										onClick={() =>
+											setShowPassword(!showPassword)
+										}
+										className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800 transition-colors'
 									>
-										<svg
-											width='16'
-											height='16'
-											viewBox='0 0 24 24'
-											fill='none'
-											stroke='currentColor'
-											strokeWidth='2'
-											strokeLinecap='round'
-											strokeLinejoin='round'
-										>
-											<path d='M9.88 9.88a3 3 0 1 0 4.24 4.24' />
-											<path d='M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68' />
-											<path d='M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61' />
-											<line
-												x1='2'
-												x2='22'
-												y1='2'
-												y2='22'
-											/>
-										</svg>
+										{showPassword ? (
+											<svg
+												width='16'
+												height='16'
+												viewBox='0 0 24 24'
+												fill='none'
+												stroke='currentColor'
+												strokeWidth='2'
+												strokeLinecap='round'
+												strokeLinejoin='round'
+											>
+												<path d='M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z' />
+												<circle
+													cx='12'
+													cy='12'
+													r='3'
+												/>
+											</svg>
+										) : (
+											<svg
+												width='16'
+												height='16'
+												viewBox='0 0 24 24'
+												fill='none'
+												stroke='currentColor'
+												strokeWidth='2'
+												strokeLinecap='round'
+												strokeLinejoin='round'
+											>
+												<path d='M9.88 9.88a3 3 0 1 0 4.24 4.24' />
+												<path d='M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68' />
+												<path d='M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61' />
+												<line
+													x1='2'
+													x2='22'
+													y1='2'
+													y2='22'
+												/>
+											</svg>
+										)}
 									</button>
 								</div>
 							</div>
 
-							<div className='flex items-center justify-between text-sm py-2'>
-								<label className='flex items-center gap-2 cursor-pointer font-medium'>
-									<input
-										type='checkbox'
-										className='rounded border-zinc-300 w-4 h-4 cursor-pointer'
-									/>
-									Remember me
-								</label>
+							{error && (
+								<p className='text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded px-3 py-2'>
+									{error}
+								</p>
+							)}
+
+							<div className='flex items-center justify-end text-sm py-1'>
 								<Link
 									href='/forgot'
 									className='font-semibold text-zinc-900 hover:text-brand-red'
@@ -141,13 +218,14 @@ export default function LoginPage() {
 
 							<Button
 								type='submit'
-								className='w-full py-6 font-semibold bg-zinc-900 text-white hover:bg-zinc-800'
+								disabled={loading}
+								className='w-full py-6 font-semibold bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-60'
 							>
-								Sign in
+								{loading ? 'Signing in…' : 'Sign in'}
 							</Button>
 						</form>
 
-						<div className='text-center text-sm font-medium mt-6'>
+						<div className='text-center text-sm font-medium'>
 							Don&apos;t have an account?{' '}
 							<Link
 								href='/signup'

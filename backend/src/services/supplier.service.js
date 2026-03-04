@@ -4,11 +4,10 @@ async function create(data) {
 	return Supplier.create(data);
 }
 
-async function getByBusiness(
-	businessId,
+async function getAll(
 	{ search, page = 1, limit = 50 } = {},
 ) {
-	const query = { businessId, isActive: true };
+	const query = { isActive: true };
 	if (search) {
 		query.$or = [
 			{ name: { $regex: search, $options: 'i' } },
@@ -34,4 +33,4 @@ async function update(id, data) {
 	});
 }
 
-module.exports = { create, getByBusiness, getById, update };
+module.exports = { create, getAll, getById, update };

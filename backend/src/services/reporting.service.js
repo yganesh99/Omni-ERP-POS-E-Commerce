@@ -8,9 +8,8 @@ const Product = require('../models/product.model');
 /**
  * Sales by store.
  */
-async function salesByStore(businessId, { startDate, endDate } = {}) {
+async function salesByStore({ startDate, endDate } = {}) {
 	const match = {
-		businessId: require('mongoose').Types.ObjectId(businessId),
 		status: { $nin: ['cancelled', 'returned'] },
 	};
 	if (startDate || endDate) {
@@ -45,9 +44,8 @@ async function salesByStore(businessId, { startDate, endDate } = {}) {
 /**
  * Sales by product.
  */
-async function salesByProduct(businessId, { startDate, endDate } = {}) {
+async function salesByProduct({ startDate, endDate } = {}) {
 	const match = {
-		businessId: require('mongoose').Types.ObjectId(businessId),
 		status: { $nin: ['cancelled', 'returned'] },
 	};
 	if (startDate || endDate) {
@@ -75,9 +73,8 @@ async function salesByProduct(businessId, { startDate, endDate } = {}) {
 /**
  * Sales by cashier.
  */
-async function salesByCashier(businessId, { startDate, endDate } = {}) {
+async function salesByCashier({ startDate, endDate } = {}) {
 	const match = {
-		businessId: require('mongoose').Types.ObjectId(businessId),
 		channel: 'pos',
 		status: { $nin: ['cancelled', 'returned'] },
 	};
@@ -119,9 +116,8 @@ async function salesByCashier(businessId, { startDate, endDate } = {}) {
 /**
  * Low stock alerts.
  */
-async function lowStock(businessId, threshold = 10) {
+async function lowStock(threshold = 10) {
 	return Inventory.find({
-		businessId,
 		$expr: {
 			$lte: [
 				{ $subtract: ['$quantity', '$reservedQuantity'] },
@@ -136,12 +132,10 @@ async function lowStock(businessId, threshold = 10) {
 /**
  * Inventory valuation.
  */
-async function inventoryValuation(businessId) {
+async function inventoryValuation() {
 	return Inventory.aggregate([
 		{
-			$match: {
-				businessId: require('mongoose').Types.ObjectId(businessId),
-			},
+			$match: {},
 		},
 		{
 			$lookup: {
@@ -170,8 +164,8 @@ async function inventoryValuation(businessId) {
 /**
  * Customer credit exposure.
  */
-async function customerCreditExposure(businessId) {
-	return Customer.find({ businessId, currentBalance: { $gt: 0 } })
+async function customerCreditExposure() {
+	return Customer.find({ currentBalance: { $gt: 0 } })
 		.select('name email phone creditLimit currentBalance')
 		.sort({ currentBalance: -1 });
 }
@@ -179,8 +173,8 @@ async function customerCreditExposure(businessId) {
 /**
  * Supplier payables summary.
  */
-async function supplierPayables(businessId) {
-	return Supplier.find({ businessId, currentBalance: { $gt: 0 } })
+async function supplierPayables() {
+	return Supplier.find({ currentBalance: { $gt: 0 } })
 		.select('name contactPerson email currentBalance')
 		.sort({ currentBalance: -1 });
 }
@@ -188,9 +182,8 @@ async function supplierPayables(businessId) {
 /**
  * Profit per SKU.
  */
-async function profitPerSku(businessId, { startDate, endDate } = {}) {
+async function profitPerSku({ startDate, endDate } = {}) {
 	const match = {
-		businessId: require('mongoose').Types.ObjectId(businessId),
 		status: { $nin: ['cancelled', 'returned'] },
 	};
 	if (startDate || endDate) {

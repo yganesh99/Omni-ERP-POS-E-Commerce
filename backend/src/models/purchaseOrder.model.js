@@ -19,11 +19,6 @@ const poItemSchema = new mongoose.Schema(
 
 const purchaseOrderSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		supplierId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Supplier',
@@ -64,8 +59,8 @@ const purchaseOrderSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-purchaseOrderSchema.index({ businessId: 1, poNumber: 1 }, { unique: true });
-purchaseOrderSchema.index({ businessId: 1, supplierId: 1 });
-purchaseOrderSchema.index({ businessId: 1, status: 1 });
+purchaseOrderSchema.index({ poNumber: 1 }, { unique: true });
+purchaseOrderSchema.index({ supplierId: 1 });
+purchaseOrderSchema.index({ status: 1 });
 
 module.exports = mongoose.model('PurchaseOrder', purchaseOrderSchema);

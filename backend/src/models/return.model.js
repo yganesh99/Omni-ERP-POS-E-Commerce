@@ -16,11 +16,6 @@ const returnItemSchema = new mongoose.Schema(
 
 const returnSchema = new mongoose.Schema(
 	{
-		businessId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Business',
-			required: true,
-		},
 		type: {
 			type: String,
 			enum: ['customer', 'supplier'],
@@ -62,7 +57,7 @@ const returnSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-returnSchema.index({ businessId: 1, type: 1 });
-returnSchema.index({ businessId: 1, orderId: 1 });
+returnSchema.index({ type: 1 });
+returnSchema.index({ orderId: 1 });
 
 module.exports = mongoose.model('Return', returnSchema);
