@@ -20,11 +20,9 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
 			<div className='relative aspect-square bg-muted'>
 				<img
 					src={
-						product.image
-							? 'http://localhost:4000' + product.image
-							: product.images && product.images.length > 0
-								? product.images[0]
-								: ''
+						product.images && product.images.length > 0
+							? 'http://localhost:4000' + product.images[0]
+							: ''
 					}
 					alt={product.name}
 					className='object-cover w-full h-full'

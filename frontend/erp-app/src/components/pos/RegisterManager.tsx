@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePosStore, Register, RegisterSession } from '@/app/pos/store';
+import { usePosStore, Register } from '@/app/pos/store';
 import {
 	Dialog,
 	DialogContent,
@@ -20,7 +21,7 @@ export function RegisterManager() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
-	const { register, session, setRegister, setSession } = usePosStore();
+	const { session, setRegister, setSession } = usePosStore();
 
 	useEffect(() => {
 		// Only show modal if no active session

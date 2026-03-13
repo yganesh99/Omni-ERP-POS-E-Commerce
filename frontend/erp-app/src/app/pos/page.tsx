@@ -53,9 +53,7 @@ export default function PosPage() {
 					id: p._id,
 					name: p.name,
 					price: p.posPrice,
-					image:
-						p.image ||
-						'https://images.unsplash.com/photo-1555529733-0e670560f8e1',
+					images: p.images || [],
 					barcode: p.sku,
 					category: p.categories?.[0]?.name || 'Uncategorized',
 					categories: p.categories || [],

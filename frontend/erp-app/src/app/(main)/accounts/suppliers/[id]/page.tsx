@@ -507,12 +507,18 @@ export default function SingleSupplierPage({
 																	6,
 															)}
 													</TableCell>
-													<TableCell>
-														{new Date(
+												<TableCell>
+													{(() => {
+														const value =
 															po.createdAt ||
-																po.orderDate,
-														).toLocaleDateString()}
-													</TableCell>
+															po.orderDate;
+														return value
+															? new Date(
+																	value,
+																).toLocaleDateString()
+															: '—';
+													})()}
+												</TableCell>
 													<TableCell className='text-right font-medium'>
 														රු
 														{(

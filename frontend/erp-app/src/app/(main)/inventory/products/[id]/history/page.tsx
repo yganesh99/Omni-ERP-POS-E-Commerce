@@ -10,7 +10,6 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Search, Download, ArrowLeft } from 'lucide-react';

@@ -44,7 +44,7 @@ export default function PosOrdersPage() {
 	}, []);
 
 	useEffect(() => {
-		let isMounted = true;
+		const isMounted = true;
 		async function fetchSessionOrders() {
 			if (!session || !session._id) return;
 			try {
@@ -57,7 +57,7 @@ export default function PosOrdersPage() {
 					setOrders(data.items);
 					setError(null);
 				}
-			} catch (err: any) {
+			} catch (err: unknown) {
 				console.error('Failed to load orders:', err);
 				if (isMounted)
 					setError('Failed to load orders. Please try again.');

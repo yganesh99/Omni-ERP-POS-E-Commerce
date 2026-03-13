@@ -1,14 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {
-	Store,
-	Monitor,
-	LogIn,
-	UserPlus,
-	LogOut,
-	HomeIcon,
-} from 'lucide-react';
+import { Store, Monitor, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';

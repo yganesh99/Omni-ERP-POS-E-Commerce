@@ -42,7 +42,11 @@ export function CartItemCard({ item }: { item: CartItem }) {
 	return (
 		<div className='flex items-center gap-3 p-3 border-b border-border bg-card'>
 			<img
-				src={item.image}
+				src={
+					item.images && item.images.length > 0
+						? 'http://localhost:4000' + item.images[0]
+						: ''
+				}
 				alt={item.name}
 				className='w-12 h-12 rounded object-cover'
 			/>
@@ -73,7 +77,8 @@ export function CartItemCard({ item }: { item: CartItem }) {
 							onChange={(e) => setInputVal(e.target.value)}
 							onBlur={handleInputBlur}
 							onKeyDown={(e) =>
-								e.key === 'Enter' && (e.target as HTMLInputElement).blur()
+								e.key === 'Enter' &&
+								(e.target as HTMLInputElement).blur()
 							}
 							className='w-14 h-8 text-center text-sm font-medium border-0 bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
 						/>

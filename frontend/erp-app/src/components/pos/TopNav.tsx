@@ -1,14 +1,6 @@
 'use client';
 
-import {
-	Search,
-	LayoutGrid,
-	Receipt,
-	Users,
-	Monitor,
-	LogOut,
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { LayoutGrid, Receipt, Users, Monitor, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';

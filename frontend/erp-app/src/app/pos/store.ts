@@ -6,7 +6,7 @@ export interface Product {
 	id: string;
 	name: string;
 	price: number;
-	image: string;
+	images: string[];
 	barcode: string;
 	category: string;
 	categories?: CategoryRef[];

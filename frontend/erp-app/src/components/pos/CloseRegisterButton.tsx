@@ -33,8 +33,13 @@ export function CloseRegisterButton() {
 			setSession(null);
 			setRegister(null);
 			setOpen(false);
-		} catch (err: any) {
-			setError(err.response?.data?.message || 'Failed to close register');
+		} catch (err: unknown) {
+			const apiError = err as {
+				response?: { data?: { message?: string } };
+			};
+			setError(
+				apiError.response?.data?.message || 'Failed to close register',
+			);
 		} finally {
 			setLoading(false);
 		}
