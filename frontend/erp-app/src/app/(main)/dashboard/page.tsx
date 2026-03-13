@@ -14,7 +14,6 @@ import {
 import {
 	TrendingUp,
 	Package,
-	ShoppingCart,
 	AlertTriangle,
 	DollarSign,
 	Users,
@@ -48,6 +47,10 @@ interface SupplierPayable {
 	currentBalance: number;
 }
 
+interface InventoryValuationItem {
+	value?: number;
+}
+
 interface RecentOrder {
 	_id: string;
 	orderNumber: string;
@@ -70,7 +73,9 @@ export default function Dashboard() {
 		[],
 	);
 	const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
-	const [inventoryValuation, setInventoryValuation] = useState<any>(null);
+	const [inventoryValuation, setInventoryValuation] = useState<
+		InventoryValuationItem[] | { totalValue?: number } | null
+	>(null);
 
 	const fetchDashboard = async () => {
 		try {
@@ -143,10 +148,14 @@ export default function Dashboard() {
 		0,
 	);
 	const invValue =
-		inventoryValuation?.totalValue ||
+		(inventoryValuation &&
+			'totalValue' in inventoryValuation &&
+			typeof inventoryValuation.totalValue === 'number' &&
+			inventoryValuation.totalValue) ||
 		(Array.isArray(inventoryValuation)
 			? inventoryValuation.reduce(
-					(s: number, v: any) => s + (v.value || 0),
+					(sum: number, v: InventoryValuationItem) =>
+						sum + (v.value || 0),
 					0,
 				)
 			: 0);

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePosStore, SelectedCustomer } from '@/app/pos/store';
+import { usePosStore } from '@/app/pos/store';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,21 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import { toast } from 'react-toastify';
 
+interface CustomerSearchResult {
+	_id: string;
+	name: string;
+	phone?: string;
+	email?: string;
+}
+
 export function CartPanel() {
 	const [mounted, setMounted] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [quoteLoading, setQuoteLoading] = useState(false);
 	const [customerSearch, setCustomerSearch] = useState('');
-	const [customerResults, setCustomerResults] = useState<any[]>([]);
+	const [customerResults, setCustomerResults] = useState<
+		CustomerSearchResult[]
+	>([]);
 	const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 	const customerDebounceRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,7 +73,11 @@ export function CartPanel() {
 				params: { search: query.trim(), limit: 10 },
 			});
 			const data = res.data.items || res.data.data || res.data || [];
-			setCustomerResults(Array.isArray(data) ? data : []);
+			setCustomerResults(
+				Array.isArray(data)
+					? (data as CustomerSearchResult[])
+					: [],
+			);
 			setShowCustomerDropdown(true);
 		} catch (err) {
 			console.error('Failed to search customers:', err);
@@ -85,7 +98,7 @@ export function CartPanel() {
 		};
 	}, [customerSearch, searchCustomers]);
 
-	const handleSelectCustomer = (customer: any) => {
+	const handleSelectCustomer = (customer: CustomerSearchResult) => {
 		setSelectedCustomer({
 			_id: customer._id,
 			name: customer.name,
@@ -144,11 +157,19 @@ export function CartPanel() {
 				quantity: item.quantity,
 			}));
 
-			const payload: any = {
+			const payload: {
+				storeId: string;
+				sessionId: string;
+				items: { productId: string; quantity: number }[];
+				paymentMethod: typeof paymentMethod;
+				customerId?: string;
+				discountType?: typeof discountType;
+				discountValue?: number;
+			} = {
 				storeId: session.storeId,
 				sessionId: session._id,
 				items: formattedItems,
-				paymentMethod: paymentMethod,
+				paymentMethod,
 			};
 
 			if (selectedCustomer) {
@@ -184,10 +205,14 @@ export function CartPanel() {
 				console.error('Failed to generate PDF invoice', pdfErr);
 				toast.error('Failed to load invoice PDF');
 			}
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error(err);
+			const apiError = err as {
+				response?: { data?: { message?: string } };
+			};
 			toast.error(
-				err.response?.data?.message || 'Failed to complete order',
+				apiError.response?.data?.message ||
+					'Failed to complete order',
 			);
 		} finally {
 			setLoading(false);
@@ -212,7 +237,13 @@ export function CartPanel() {
 				quantity: item.quantity,
 			}));
 
-			const payload: any = {
+			const payload: {
+				storeId: string;
+				items: { productId: string; quantity: number }[];
+				customerId?: string;
+				discountType?: typeof discountType;
+				discountValue?: number;
+			} = {
 				storeId: session.storeId,
 				items: formattedItems,
 			};
@@ -236,10 +267,14 @@ export function CartPanel() {
 			});
 			const url = window.URL.createObjectURL(blob);
 			window.open(url, '_blank');
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error(err);
+			const apiError = err as {
+				response?: { data?: { message?: string } };
+			};
 			toast.error(
-				err.response?.data?.message || 'Failed to generate quote',
+				apiError.response?.data?.message ||
+					'Failed to generate quote',
 			);
 		} finally {
 			setQuoteLoading(false);

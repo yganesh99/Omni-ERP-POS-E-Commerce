@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import api from '../lib/api';
 
 export type Role =
@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 	const router = useRouter();
-	const pathname = usePathname();
 
 	useEffect(() => {
 		// Check for existing session
@@ -69,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		window.addEventListener('auth:unauthorized', handleUnauthorized);
 		return () =>
 			window.removeEventListener('auth:unauthorized', handleUnauthorized);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const login = (accessToken: string, refreshToken: string) => {

@@ -1,10 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+
+interface ApiError {
+	response?: {
+		data?: {
+			message?: string;
+		};
+	};
+}
 
 export default function SignInPage() {
 	const [showPassword, setShowPassword] = useState(false);
@@ -22,9 +29,10 @@ export default function SignInPage() {
 		try {
 			const res = await api.post('/auth/login', { email, password });
 			login(res.data.accessToken, res.data.refreshToken);
-		} catch (err: any) {
+		} catch (err: unknown) {
+			const apiError = err as ApiError;
 			setError(
-				err.response?.data?.message ||
+				apiError.response?.data?.message ||
 					'Failed to sign in. Please try again.',
 			);
 		} finally {

@@ -51,6 +51,15 @@ interface LedgerEntry {
 	createdAt: string;
 }
 
+interface CustomerOrder {
+	_id: string;
+	orderNumber?: string;
+	totalAmount?: number;
+	paymentStatus?: string;
+	status?: string;
+	createdAt: string;
+}
+
 export default function SingleCustomerPage({
 	params,
 }: {
@@ -84,7 +93,7 @@ export default function SingleCustomerPage({
 	const [newCreditLimit, setNewCreditLimit] = useState('');
 
 	// Orders
-	const [recentOrders, setRecentOrders] = useState<any[]>([]);
+	const [recentOrders, setRecentOrders] = useState<CustomerOrder[]>([]);
 
 	const fetchCustomer = async () => {
 		try {
@@ -135,6 +144,7 @@ export default function SingleCustomerPage({
 		}
 	};
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		if (id) {
 			fetchCustomer();
@@ -461,8 +471,8 @@ export default function SingleCustomerPage({
 													customer.
 												</TableCell>
 											</TableRow>
-										) : (
-											recentOrders.map((order: any) => (
+											) : (
+											recentOrders.map((order) => (
 												<TableRow
 													key={order._id}
 													className='cursor-pointer hover:bg-zinc-50'

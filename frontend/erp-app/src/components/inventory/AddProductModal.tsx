@@ -13,6 +13,11 @@ import {
 import { Input } from '@/components/ui/input';
 import api from '@/lib/api';
 
+interface CategoryOption {
+	_id: string;
+	name: string;
+}
+
 interface AddProductModalProps {
 	isOpen: boolean;
 	onClose: () => void;
@@ -47,19 +52,21 @@ export function AddProductModal({
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	};
 
-	const [categoriesList, setCategoriesList] = useState<any[]>([]);
+	const [categoriesList, setCategoriesList] = useState<CategoryOption[]>([]);
 
 	useEffect(() => {
 		if (isOpen) {
 			api.get('/categories')
-				.then((res) =>
+				.then((res) => {
+					const data =
+						res.data.items || res.data.data || res.data || [];
 					setCategoriesList(
-						res.data.items || res.data.data || res.data || [],
-					),
-				)
-				.catch((err) =>
-					console.error('Failed to fetch categories:', err),
-				);
+						Array.isArray(data) ? (data as CategoryOption[]) : [],
+					);
+				})
+				.catch((err) => {
+					console.error('Failed to fetch categories:', err);
+				});
 		}
 	}, [isOpen]);
 
@@ -78,8 +85,10 @@ export function AddProductModal({
 		setIsLoading(true);
 
 		try {
-			let filledFormData = Object.fromEntries(
-				Object.entries(formData).filter(([_, value]) => value !== ''),
+			const filledFormData = Object.fromEntries(
+				Object.entries(formData).filter(
+					([, value]) => value !== '',
+				),
 			);
 			// Convert price strings to numbers before sending
 			const payload = {
@@ -111,10 +120,13 @@ export function AddProductModal({
 				isOnSale: false,
 				salePrice: '',
 			});
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error('Error adding product:', err);
+			const apiError = err as {
+				response?: { data?: { message?: string } };
+			};
 			setError(
-				err.response?.data?.message ||
+				apiError.response?.data?.message ||
 					'Failed to add product. Please try again.',
 			);
 		} finally {

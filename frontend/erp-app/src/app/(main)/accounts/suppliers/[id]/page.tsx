@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,25 @@ interface Supplier {
 	isActive?: boolean;
 }
 
+interface SupplierPurchaseOrder {
+	_id: string;
+	poNumber?: string;
+	createdAt?: string;
+	orderDate?: string;
+	totalAmount?: number;
+	paymentStatus?: string;
+	status?: string;
+}
+
+interface SupplierInvoice {
+	_id: string;
+	invoiceNumber: string;
+	createdAt: string;
+	totalAmount?: number;
+	paidAmount?: number;
+	status: 'paid' | 'partial_paid' | 'unpaid' | string;
+}
+
 export default function SingleSupplierPage({
 	params,
 }: {
@@ -68,8 +87,8 @@ export default function SingleSupplierPage({
 	});
 
 	// For now, mock recent POs or fetch if there's an endpoint
-	const [recentPOs, setRecentPOs] = useState<any[]>([]);
-	const [invoices, setInvoices] = useState<any[]>([]);
+	const [recentPOs, setRecentPOs] = useState<SupplierPurchaseOrder[]>([]);
+	const [invoices, setInvoices] = useState<SupplierInvoice[]>([]);
 	const [isInvoicesOpen, setIsInvoicesOpen] = useState(false);
 	const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 	const [paymentData, setPaymentData] = useState({
@@ -108,7 +127,8 @@ export default function SingleSupplierPage({
 			// Assuming there's a purchase-orders endpoint that filters by supplierId
 			const response = await api.get(`/purchase-orders?supplierId=${id}`);
 			const data = response.data;
-			const posArray = data.items || data.data || data || [];
+			const posArray: SupplierPurchaseOrder[] =
+				(data.items || data.data || data || []) as SupplierPurchaseOrder[];
 			// Just slice first 5 for history if needed
 			setRecentPOs(posArray.slice(0, 5));
 		} catch (error) {
@@ -122,13 +142,15 @@ export default function SingleSupplierPage({
 				`/supplier-invoices?supplierId=${id}`,
 			);
 			const data = response.data;
-			const invoicesArray = data.items || data.data || data || [];
+			const invoicesArray: SupplierInvoice[] =
+				(data.items || data.data || data || []) as SupplierInvoice[];
 			setInvoices(invoicesArray);
 		} catch (error) {
 			console.error('Failed to fetch invoices:', error);
 		}
 	};
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		if (id) {
 			fetchSupplier();

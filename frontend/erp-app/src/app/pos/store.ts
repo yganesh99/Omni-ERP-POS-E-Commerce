@@ -9,12 +9,17 @@ export interface Product {
 	image: string;
 	barcode: string;
 	category: string;
-	categories?: any[];
+	categories?: CategoryRef[];
 	stock?: number;
 	/** Tax rate percentage (e.g. 5 for 5%). Used for POS totals and invoice match. */
 	taxRate?: number;
 	/** Product unit (e.g. pcs, kg, m). Drives whether quantity allows decimals. */
 	unit?: string;
+}
+
+export interface CategoryRef {
+	_id: string;
+	name?: string;
 }
 
 export interface CartItem extends Product {

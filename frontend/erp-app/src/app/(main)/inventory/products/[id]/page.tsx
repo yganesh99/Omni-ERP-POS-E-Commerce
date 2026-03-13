@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,14 +17,6 @@ import {
 	ImageIcon,
 } from 'lucide-react';
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
-import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
@@ -32,9 +26,18 @@ import {
 import api from '@/lib/api';
 import {
 	allowsDecimalQuantity,
-	quantityStep,
 	normalizeQuantity,
 } from '@/lib/quantityByUnit';
+
+interface Category {
+	_id: string;
+	name: string;
+}
+
+interface StoreSummary {
+	_id: string;
+	name: string;
+}
 
 interface Product {
 	_id: string;
@@ -84,8 +87,8 @@ export default function SingleProductPage({
 	const [isAdjustOpen, setIsAdjustOpen] = useState(false);
 	const [adjustStoreId, setAdjustStoreId] = useState('');
 	const [adjustQty, setAdjustQty] = useState('');
-	const [stores, setStores] = useState<any[]>([]);
-	const [categoriesList, setCategoriesList] = useState<any[]>([]);
+	const [stores, setStores] = useState<StoreSummary[]>([]);
+	const [categoriesList, setCategoriesList] = useState<Category[]>([]);
 
 	const fetchProduct = async () => {
 		try {
@@ -119,7 +122,8 @@ export default function SingleProductPage({
 		try {
 			const response = await api.get('/stores');
 			const data = response.data;
-			const list = data.items || data.data || data || [];
+			const list: StoreSummary[] =
+				(data.items || data.data || data || []) as StoreSummary[];
 			setStores(Array.isArray(list) ? list : []);
 		} catch (error) {
 			console.error('Failed to fetch stores:', error);
@@ -134,12 +138,13 @@ export default function SingleProductPage({
 				response.data.data ||
 				response.data ||
 				[];
-			setCategoriesList(Array.isArray(data) ? data : []);
+			setCategoriesList(Array.isArray(data) ? (data as Category[]) : []);
 		} catch (error) {
 			console.error('Failed to fetch categories:', error);
 		}
 	};
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		if (id) {
 			fetchProduct();
@@ -701,7 +706,7 @@ export default function SingleProductPage({
 								}
 							>
 								<option value=''>Select a store</option>
-								{stores.map((s: any) => (
+								{stores.map((s) => (
 									<option
 										key={s._id}
 										value={s._id}

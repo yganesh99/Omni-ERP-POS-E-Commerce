@@ -19,8 +19,15 @@ export interface PaymentDetail {
 
 export interface Order {
 	_id: string;
-	storeId: any;
-	customerId?: any;
+	storeId: {
+		_id: string;
+		name?: string;
+		code?: string;
+	};
+	customerId?: {
+		_id: string;
+		name?: string;
+	};
 	orderNumber: string;
 	channel: 'pos' | 'ecommerce';
 	status:
