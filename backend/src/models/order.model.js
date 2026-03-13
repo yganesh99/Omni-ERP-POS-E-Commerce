@@ -9,7 +9,8 @@ const orderItemSchema = new mongoose.Schema(
 		},
 		sku: { type: String, required: true },
 		name: { type: String, required: true },
-		quantity: { type: Number, required: true, min: 1 },
+		quantity: { type: Number, required: true, min: 0 },
+		unit: { type: String, default: 'pcs' },
 		unitPrice: { type: Number, required: true, min: 0 },
 		taxRate: { type: Number, default: 0, min: 0 },
 		taxAmount: { type: Number, default: 0, min: 0 },
@@ -58,7 +59,9 @@ const orderSchema = new mongoose.Schema(
 				'shipped',
 				'delivered',
 				'cancelled',
-				'returned',
+				'returned', // legacy; use refunded for full refund
+				'partially_returned', // some items returned, more returns allowed
+				'refunded', // whole order refunded
 			],
 			default: 'pending',
 		},
@@ -73,6 +76,13 @@ const orderSchema = new mongoose.Schema(
 		},
 		payments: { type: [paymentDetailSchema], default: [] },
 		creditUsed: { type: Number, default: 0, min: 0 },
+		discountType: {
+			type: String,
+			enum: ['percentage', 'fixed', null],
+			default: null,
+		},
+		discountValue: { type: Number, default: 0, min: 0 },
+		discountAmount: { type: Number, default: 0, min: 0 },
 		notes: { type: String },
 		fulfilledBy: {
 			type: mongoose.Schema.Types.ObjectId,

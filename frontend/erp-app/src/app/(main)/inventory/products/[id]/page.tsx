@@ -30,21 +30,28 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog';
 import api from '@/lib/api';
+import {
+	allowsDecimalQuantity,
+	quantityStep,
+	normalizeQuantity,
+} from '@/lib/quantityByUnit';
 
 interface Product {
 	_id: string;
 	sku: string;
 	name: string;
 	description?: string;
-	category?: string;
+	categories?: any[];
 	unit?: string;
 	posPrice: number;
 	ecommercePrice: number;
-	costPrice: number;
 	taxRate: number;
 	visibility: string;
 	isActive: boolean;
 	image?: string;
+	images?: string[];
+	isOnSale?: boolean;
+	salePrice?: number;
 }
 
 export default function SingleProductPage({
@@ -63,13 +70,14 @@ export default function SingleProductPage({
 		name: '',
 		sku: '',
 		description: '',
-		category: '',
+		categories: [] as string[],
 		unit: 'pcs',
 		posPrice: 0,
 		ecommercePrice: 0,
-		costPrice: 0,
 		taxRate: 0,
 		visibility: 'both',
+		isOnSale: false,
+		salePrice: 0,
 	});
 
 	// Stock adjustment dialog
@@ -77,6 +85,7 @@ export default function SingleProductPage({
 	const [adjustStoreId, setAdjustStoreId] = useState('');
 	const [adjustQty, setAdjustQty] = useState('');
 	const [stores, setStores] = useState<any[]>([]);
+	const [categoriesList, setCategoriesList] = useState<any[]>([]);
 
 	const fetchProduct = async () => {
 		try {
@@ -88,13 +97,16 @@ export default function SingleProductPage({
 				name: data.name || '',
 				sku: data.sku || '',
 				description: data.description || '',
-				category: data.category || '',
+				categories: data.categories
+					? data.categories.map((c: any) => c._id)
+					: [],
 				unit: data.unit || 'pcs',
 				posPrice: data.posPrice || 0,
 				ecommercePrice: data.ecommercePrice || 0,
-				costPrice: data.costPrice || 0,
 				taxRate: data.taxRate || 0,
 				visibility: data.visibility || 'both',
+				isOnSale: data.isOnSale ?? false,
+				salePrice: data.salePrice ?? 0,
 			});
 		} catch (error) {
 			console.error('Failed to fetch product:', error);
@@ -114,10 +126,25 @@ export default function SingleProductPage({
 		}
 	};
 
+	const fetchCategories = async () => {
+		try {
+			const response = await api.get('/categories');
+			const data =
+				response.data.items ||
+				response.data.data ||
+				response.data ||
+				[];
+			setCategoriesList(Array.isArray(data) ? data : []);
+		} catch (error) {
+			console.error('Failed to fetch categories:', error);
+		}
+	};
+
 	useEffect(() => {
 		if (id) {
 			fetchProduct();
 			fetchStores();
+			fetchCategories();
 		}
 	}, [id]);
 
@@ -128,13 +155,14 @@ export default function SingleProductPage({
 				name: formData.name,
 				sku: formData.sku,
 				description: formData.description,
-				category: formData.category,
+				categories: formData.categories,
 				unit: formData.unit,
 				posPrice: formData.posPrice,
 				ecommercePrice: formData.ecommercePrice,
-				costPrice: formData.costPrice,
 				taxRate: formData.taxRate,
 				visibility: formData.visibility,
+				isOnSale: formData.isOnSale,
+				salePrice: formData.isOnSale ? formData.salePrice : null,
 			});
 			await fetchProduct();
 			alert('Product updated successfully!');
@@ -144,6 +172,15 @@ export default function SingleProductPage({
 		} finally {
 			setIsSaving(false);
 		}
+	};
+
+	const handleCategoryToggle = (id: string) => {
+		setFormData((prev) => ({
+			...prev,
+			categories: prev.categories.includes(id)
+				? prev.categories.filter((c) => c !== id)
+				: [...prev.categories, id],
+		}));
 	};
 
 	const handleToggleActive = async () => {
@@ -175,20 +212,30 @@ export default function SingleProductPage({
 	};
 
 	const handleAdjustStock = async () => {
-		const qty = parseInt(adjustQty);
-		if (!qty || !adjustStoreId) {
-			alert('Please select a store and enter a quantity.');
+		const parsed = parseFloat(adjustQty);
+		if (!Number.isFinite(parsed) || parsed === 0 || !adjustStoreId) {
+			alert('Please select a store and enter a quantity (positive to add, negative to remove).');
+			return;
+		}
+		const unit = formData.unit || 'pcs';
+		const normalized =
+			parsed > 0
+				? normalizeQuantity(parsed, unit)
+				: -normalizeQuantity(Math.abs(parsed), unit);
+		if (normalized === 0) {
+			alert('Please enter a valid quantity change.');
 			return;
 		}
 		try {
 			await api.post('/inventory/adjust', {
 				productId: id,
 				storeId: adjustStoreId,
-				quantityChange: qty,
+				quantityChange: normalized,
 			});
 			setIsAdjustOpen(false);
 			setAdjustQty('');
 			setAdjustStoreId('');
+			await fetchProduct();
 			alert('Stock adjusted successfully!');
 		} catch (error) {
 			console.error('Failed to adjust stock:', error);
@@ -289,23 +336,43 @@ export default function SingleProductPage({
 								</div>
 								<div className='space-y-2'>
 									<label className='text-sm font-medium'>
-										Category
+										Categories
 									</label>
-									<Input
-										value={formData.category}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												category: e.target.value,
-											})
-										}
-									/>
+									<div className='max-h-32 overflow-y-auto border rounded-md p-2 space-y-2 bg-white w-full'>
+										{categoriesList.length === 0 ? (
+											<p className='text-xs text-zinc-500'>
+												No active categories found
+											</p>
+										) : (
+											categoriesList.map((cat) => (
+												<label
+													key={cat._id}
+													className='flex items-center space-x-2 text-sm'
+												>
+													<input
+														type='checkbox'
+														checked={formData.categories.includes(
+															cat._id,
+														)}
+														onChange={() =>
+															handleCategoryToggle(
+																cat._id,
+															)
+														}
+														className='rounded border-zinc-300'
+													/>
+													<span>{cat.name}</span>
+												</label>
+											))
+										)}
+									</div>
 								</div>
 								<div className='space-y-2'>
 									<label className='text-sm font-medium'>
 										Unit
 									</label>
-									<Input
+									<select
+										className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
 										value={formData.unit}
 										onChange={(e) =>
 											setFormData({
@@ -313,7 +380,25 @@ export default function SingleProductPage({
 												unit: e.target.value,
 											})
 										}
-									/>
+									>
+										<option value='pcs'>Pieces (pcs) — whole numbers</option>
+										<option value='bales'>Bales — whole numbers</option>
+										<option value='cartons'>Cartons — whole numbers</option>
+										<option value='m'>Meters (m) — decimals</option>
+										<option value='kg'>Kilograms (kg) — decimals</option>
+										<option value='l'>Litres (l) — decimals</option>
+										{formData.unit &&
+											!['pcs', 'bales', 'cartons', 'm', 'kg', 'l'].includes(
+												formData.unit,
+											) && (
+												<option value={formData.unit}>
+													{formData.unit} (current)
+												</option>
+											)}
+									</select>
+									<p className='text-xs text-zinc-500'>
+										POS and inventory quantities follow this unit (whole vs decimal).
+									</p>
 								</div>
 								<div className='space-y-2'>
 									<label className='text-sm font-medium'>
@@ -357,23 +442,51 @@ export default function SingleProductPage({
 								</div>
 								<div className='space-y-2'>
 									<label className='text-sm font-medium'>
-										Cost Price (රු)
+										E-com Sale
 									</label>
-									<Input
-										type='number'
-										step='0.01'
-										min='0'
-										value={formData.costPrice}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												costPrice:
-													parseFloat(
-														e.target.value,
-													) || 0,
-											})
-										}
-									/>
+									<div className='flex items-center gap-2 mb-1'>
+										<input
+											id='isOnSale'
+											name='isOnSale'
+											type='checkbox'
+											checked={formData.isOnSale}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													isOnSale: e.target.checked,
+												})
+											}
+											className='rounded border-zinc-300'
+										/>
+										<label
+											htmlFor='isOnSale'
+											className='text-sm'
+										>
+											Mark as on sale
+										</label>
+									</div>
+									{formData.isOnSale && (
+										<div className='space-y-1'>
+											<label className='text-xs font-medium text-zinc-600'>
+												Sale Price (E-com)
+											</label>
+											<Input
+												type='number'
+												step='0.01'
+												min='0'
+												value={formData.salePrice}
+												onChange={(e) =>
+													setFormData({
+														...formData,
+														salePrice:
+															parseFloat(
+																e.target.value,
+															) || 0,
+													})
+												}
+											/>
+										</div>
+									)}
 								</div>
 								<div className='space-y-2'>
 									<label className='text-sm font-medium'>
@@ -458,10 +571,36 @@ export default function SingleProductPage({
 					{/* Product Image */}
 					<Card>
 						<CardHeader>
-							<CardTitle>Product Image</CardTitle>
+							<CardTitle>Product Images</CardTitle>
 						</CardHeader>
 						<CardContent className='space-y-4'>
-							{product.image ? (
+							{product.images && product.images.length > 0 ? (
+								<div className='space-y-3'>
+									<div className='w-full aspect-square rounded-lg border overflow-hidden bg-zinc-50'>
+										<img
+											src={product.images[0]}
+											alt={product.name}
+											className='w-full h-full object-cover'
+										/>
+									</div>
+									{product.images.length > 1 && (
+										<div className='flex gap-2 overflow-x-auto'>
+											{product.images.map((img, idx) => (
+												<div
+													key={img + idx}
+													className='w-16 h-16 rounded-md border overflow-hidden bg-zinc-50 flex-shrink-0'
+												>
+													<img
+														src={img}
+														alt={`${product.name} ${idx + 1}`}
+														className='w-full h-full object-cover'
+													/>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
+							) : product.image ? (
 								<div className='w-full aspect-square rounded-lg border overflow-hidden bg-zinc-50'>
 									<img
 										src={product.image}
@@ -490,8 +629,8 @@ export default function SingleProductPage({
 								onClick={() => fileInputRef.current?.click()}
 							>
 								<Upload className='w-4 h-4 mr-2' />
-								{product.image
-									? 'Change Image'
+								{product.images && product.images.length > 0
+									? 'Add Another Image'
 									: 'Upload Image'}
 							</Button>
 						</CardContent>
@@ -574,17 +713,25 @@ export default function SingleProductPage({
 						</div>
 						<div className='space-y-2'>
 							<label className='text-sm font-medium'>
-								Quantity Change *
+								Quantity Change * ({formData.unit || 'pcs'})
 							</label>
 							<Input
 								type='number'
+								step={allowsDecimalQuantity(formData.unit) ? 0.01 : 1}
+								min={allowsDecimalQuantity(formData.unit) ? undefined : undefined}
 								value={adjustQty}
 								onChange={(e) => setAdjustQty(e.target.value)}
-								placeholder='Positive to add, negative to remove'
+								placeholder={
+									allowsDecimalQuantity(formData.unit)
+										? 'e.g. 2.5 or -1.25'
+										: 'e.g. 10 or -3'
+								}
 							/>
 							<p className='text-xs text-zinc-500'>
-								Use positive values to add stock, negative to
-								remove.
+								Positive to add, negative to remove.{' '}
+								{allowsDecimalQuantity(formData.unit)
+									? 'Decimals allowed (kg, m, etc.).'
+									: 'Whole numbers only (pcs, bales, cartons).'}
 							</p>
 						</div>
 					</div>

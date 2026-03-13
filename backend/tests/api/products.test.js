@@ -50,7 +50,6 @@ const VALID_PRODUCT = {
 	unit: 'pcs',
 	posPrice: 10.99,
 	ecommercePrice: 12.99,
-	costPrice: 5.5,
 	taxRate: 8,
 	visibility: 'both',
 };
@@ -93,7 +92,6 @@ describe('POST /api/products', () => {
 			name: 'Minimal Product',
 			posPrice: 5,
 			ecommercePrice: 6,
-			costPrice: 3,
 		});
 
 		expect(res.status).toBe(201);
@@ -104,23 +102,19 @@ describe('POST /api/products', () => {
 	const missingFieldCases = [
 		{
 			label: 'missing sku',
-			body: { name: 'X', posPrice: 1, ecommercePrice: 1, costPrice: 1 },
+			body: { name: 'X', posPrice: 1, ecommercePrice: 1 },
 		},
 		{
 			label: 'missing name',
-			body: { sku: 'X', posPrice: 1, ecommercePrice: 1, costPrice: 1 },
+			body: { sku: 'X', posPrice: 1, ecommercePrice: 1 },
 		},
 		{
 			label: 'missing posPrice',
-			body: { sku: 'X', name: 'X', ecommercePrice: 1, costPrice: 1 },
+			body: { sku: 'X', name: 'X', ecommercePrice: 1 },
 		},
 		{
 			label: 'missing ecommercePrice',
-			body: { sku: 'X', name: 'X', posPrice: 1, costPrice: 1 },
-		},
-		{
-			label: 'missing costPrice',
-			body: { sku: 'X', name: 'X', posPrice: 1, ecommercePrice: 1 },
+			body: { sku: 'X', name: 'X', posPrice: 1 },
 		},
 	];
 
@@ -136,10 +130,6 @@ describe('POST /api/products', () => {
 		{
 			label: 'negative posPrice (boundary: -1)',
 			body: { ...VALID_PRODUCT, sku: 'BND-001', posPrice: -1 },
-		},
-		{
-			label: 'negative costPrice (boundary: -0.01)',
-			body: { ...VALID_PRODUCT, sku: 'BND-002', costPrice: -0.01 },
 		},
 		{
 			label: 'invalid visibility enum',

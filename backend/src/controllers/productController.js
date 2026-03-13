@@ -65,6 +65,15 @@ exports.toggleActive = async (req, res, next) => {
 	}
 };
 
+exports.searchForPos = async (req, res, next) => {
+	try {
+		const result = await productService.searchForPos(req.query);
+		res.json(result);
+	} catch (err) {
+		next(err);
+	}
+};
+
 exports.uploadImage = async (req, res, next) => {
 	try {
 		if (!req.file) {
@@ -73,13 +82,21 @@ exports.uploadImage = async (req, res, next) => {
 
 		const imageUrl = `/uploads/products/${req.file.filename}`;
 
-		const product = await productService.update(req.params.id, {
-			image: imageUrl,
-		});
+		const product = await productService.getById(req.params.id);
 
 		if (!product) {
 			return res.status(404).json({ message: 'Not found' });
 		}
+
+		product.image = imageUrl;
+		const existingImages = Array.isArray(product.images)
+			? product.images
+			: [];
+		product.images = [...existingImages, imageUrl];
+
+		await product.save();
+
+		const plainProduct = product.toObject();
 
 		logAudit({
 			userId: req.user.id,
@@ -89,7 +106,7 @@ exports.uploadImage = async (req, res, next) => {
 			changes: { image: imageUrl },
 		});
 
-		res.json(product);
+		res.json(plainProduct);
 	} catch (err) {
 		next(err);
 	}

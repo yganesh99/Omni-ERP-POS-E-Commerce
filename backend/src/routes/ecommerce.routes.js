@@ -23,6 +23,11 @@ router.post(
 				.required(),
 			sessionId: Joi.string().required(),
 			ttlMinutes: Joi.number().integer().min(1).optional(),
+			discountType: Joi.string()
+				.valid('percentage', 'fixed')
+				.optional()
+				.allow(null),
+			discountValue: Joi.number().min(0).optional(),
 		}),
 	}),
 	controller.checkout,

@@ -9,19 +9,42 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAdd }: ProductCardProps) {
+	const stockAvailable = product.stock ?? null;
+	const isOutOfStock = stockAvailable !== null && stockAvailable <= 0;
+
 	return (
 		<Card
-			className='overflow-hidden cursor-pointer touch-manipulation hover:border-black transition-all bg-white rounded-xl border border-zinc-200 shadow-sm h-full flex flex-col group'
-			onClick={() => onAdd(product)}
+			className={`overflow-hidden cursor-pointer touch-manipulation hover:border-black transition-all bg-white rounded-xl border border-zinc-200 shadow-sm h-full flex flex-col group ${isOutOfStock ? 'opacity-50' : ''}`}
+			onClick={() => !isOutOfStock && onAdd(product)}
 		>
 			<div className='relative aspect-square bg-muted'>
-				{/* Using standard img for robust mockup without Next.js domains config issues */}
 				<img
-					src={product.image}
+					src={
+						product.image
+							? 'http://localhost:4000' + product.image
+							: product.images && product.images.length > 0
+								? product.images[0]
+								: ''
+					}
 					alt={product.name}
 					className='object-cover w-full h-full'
 					loading='lazy'
 				/>
+				{stockAvailable !== null && (
+					<span
+						className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+							isOutOfStock
+								? 'bg-red-100 text-red-700'
+								: stockAvailable <= 5
+									? 'bg-amber-100 text-amber-700'
+									: 'bg-emerald-100 text-emerald-700'
+						}`}
+					>
+						{isOutOfStock
+							? 'Out of stock'
+							: `${stockAvailable} in stock`}
+					</span>
+				)}
 			</div>
 			<CardContent className='p-3 flex-1 flex flex-col justify-between gap-2'>
 				<div>
@@ -39,6 +62,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
 					<Button
 						size='icon'
 						variant='default'
+						disabled={isOutOfStock}
 						className='h-8 w-8 rounded-full shrink-0 touch-manipulation relative z-10 bg-black text-white hover:bg-zinc-800 transition-colors'
 					>
 						<Plus className='h-4 w-4' />

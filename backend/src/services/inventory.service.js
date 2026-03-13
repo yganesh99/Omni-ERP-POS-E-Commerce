@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 const Inventory = require('../models/inventory.model');
 const InventoryTransfer = require('../models/inventoryTransfer.model');
 const StockLock = require('../models/stockLock.model');
+const Product = require('../models/product.model');
 const { logAudit } = require('../middlewares/auditLog');
+const { normalizeQuantity, normalizeQuantityChange } = require('../utils/quantityByUnit');
 
 /**
  * Get stock levels. Optionally filter by store and/or product.
@@ -29,19 +31,27 @@ async function getTotalAvailable(productId) {
 
 /**
  * Adjust stock (manual adjustment with audit trail).
+ * Quantity change is normalized by product unit (whole numbers for pcs/bales, decimals for kg/m etc.).
  */
 async function adjustStock(productId, storeId, quantityChange, userId) {
+	const product = await Product.findById(productId).select('unit').lean();
+	const unit = product?.unit || 'pcs';
+	const normalizedChange = normalizeQuantityChange(quantityChange, unit);
+	if (normalizedChange === 0) {
+		const inv = await Inventory.findOne({ productId, storeId }).lean();
+		return inv || { productId, storeId, quantity: 0, reservedQuantity: 0 };
+	}
+
 	const inv = await Inventory.findOneAndUpdate(
 		{ productId, storeId },
-		{ $inc: { quantity: quantityChange } },
+		{ $inc: { quantity: normalizedChange } },
 		{ new: true, upsert: true, setDefaultsOnInsert: true },
 	);
 
 	if (inv.quantity < 0) {
-		// rollback
 		await Inventory.findOneAndUpdate(
 			{ productId, storeId },
-			{ $inc: { quantity: -quantityChange } },
+			{ $inc: { quantity: -normalizedChange } },
 		);
 		const err = new Error('Adjustment would result in negative stock');
 		err.status = 400;
@@ -53,21 +63,40 @@ async function adjustStock(productId, storeId, quantityChange, userId) {
 		action: 'adjust',
 		entity: 'Inventory',
 		entityId: inv._id,
-		changes: { quantityChange, newQuantity: inv.quantity },
+		changes: { quantityChange: normalizedChange, newQuantity: inv.quantity },
 	});
 
 	return inv;
 }
 
 /**
+ * Normalize item quantities by product unit (fetch products, then normalize each item.quantity).
+ */
+async function normalizeItemsByUnit(items) {
+	if (!items || items.length === 0) return items;
+	const productIds = [...new Set(items.map((i) => i.productId))];
+	const products = await Product.find({ _id: { $in: productIds } })
+		.select('unit')
+		.lean();
+	const unitByProduct = {};
+	for (const p of products) unitByProduct[String(p._id)] = p.unit || 'pcs';
+	return items.map((item) => ({
+		...item,
+		quantity: normalizeQuantity(item.quantity, unitByProduct[String(item.productId)]),
+	}));
+}
+
+/**
  * Transfer stock between stores (atomic via Mongoose transaction).
+ * Item quantities are normalized by product unit.
  */
 async function transferStock(fromStoreId, toStoreId, items, userId) {
+	const normalizedItems = await normalizeItemsByUnit(items);
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
 	try {
-		for (const item of items) {
+		for (const item of normalizedItems) {
 			// Decrement source
 			const source = await Inventory.findOneAndUpdate(
 				{
@@ -101,7 +130,7 @@ async function transferStock(fromStoreId, toStoreId, items, userId) {
 				{
 					fromStoreId,
 					toStoreId,
-					items,
+					items: normalizedItems,
 					status: 'completed',
 					createdBy: userId,
 				},
@@ -116,7 +145,7 @@ async function transferStock(fromStoreId, toStoreId, items, userId) {
 			action: 'transfer',
 			entity: 'InventoryTransfer',
 			entityId: transfer[0]._id,
-			changes: { fromStoreId, toStoreId, items },
+			changes: { fromStoreId, toStoreId, items: normalizedItems },
 		});
 
 		return transfer[0];
@@ -131,14 +160,16 @@ async function transferStock(fromStoreId, toStoreId, items, userId) {
 
 /**
  * Soft-lock stock for ecommerce checkout.
+ * Item quantities are normalized by product unit.
  */
 async function lockStock(storeId, items, sessionId, ttlMinutes = 15) {
+	const normalizedItems = await normalizeItemsByUnit(items);
 	const session = await mongoose.startSession();
 	session.startTransaction();
 
 	try {
 		const locks = [];
-		for (const item of items) {
+		for (const item of normalizedItems) {
 			// Check available
 			const inv = await Inventory.findOne({
 				productId: item.productId,

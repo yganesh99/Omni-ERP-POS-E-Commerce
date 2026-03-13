@@ -150,10 +150,7 @@ async function inventoryValuation() {
 			$group: {
 				_id: null,
 				totalUnits: { $sum: '$quantity' },
-				totalCostValue: {
-					$sum: { $multiply: ['$quantity', '$product.costPrice'] },
-				},
-				totalRetailValue: {
+				totalValue: {
 					$sum: { $multiply: ['$quantity', '$product.posPrice'] },
 				},
 			},
@@ -210,11 +207,7 @@ async function profitPerSku({ startDate, endDate } = {}) {
 				sku: { $first: '$items.sku' },
 				name: { $first: '$items.name' },
 				totalRevenue: { $sum: '$items.lineTotal' },
-				totalCost: {
-					$sum: {
-						$multiply: ['$items.quantity', '$product.costPrice'],
-					},
-				},
+				totalCost: { $sum: 0 },
 				totalQuantity: { $sum: '$items.quantity' },
 			},
 		},

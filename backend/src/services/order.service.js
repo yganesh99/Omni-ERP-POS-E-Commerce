@@ -1,12 +1,18 @@
 const Order = require('../models/order.model');
 
-async function getAll(
-	{ channel, status, customerId, page = 1, limit = 50 } = {},
-) {
+async function getAll({
+	channel,
+	status,
+	customerId,
+	sessionId,
+	page = 1,
+	limit = 50,
+} = {}) {
 	const query = {};
 	if (channel) query.channel = channel;
 	if (status) query.status = status;
 	if (customerId) query.customerId = customerId;
+	if (sessionId) query.sessionId = sessionId;
 
 	const skip = (page - 1) * limit;
 	const [items, total] = await Promise.all([

@@ -9,6 +9,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth.routes');
 const storeRoutes = require('./routes/store.routes');
 const userRoutes = require('./routes/user.routes');
+const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
 const inventoryRoutes = require('./routes/inventory.routes');
 const customerRoutes = require('./routes/customer.routes');
@@ -54,6 +55,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 
 // ── Store & Resource Routes ─────────────────────────────────────────────
 app.use('/api/stores', storeRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);

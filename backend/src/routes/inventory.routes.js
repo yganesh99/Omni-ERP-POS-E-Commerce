@@ -7,7 +7,7 @@ const router = express.Router();
 
 const itemSchema = Joi.object({
 	productId: Joi.string().hex().length(24).required(),
-	quantity: Joi.number().integer().min(1).required(),
+	quantity: Joi.number().min(0.001).required(),
 });
 
 router.get(
@@ -28,7 +28,7 @@ router.post(
 		[Segments.BODY]: Joi.object({
 			productId: Joi.string().hex().length(24).required(),
 			storeId: Joi.string().hex().length(24).required(),
-			quantityChange: Joi.number().integer().required(),
+			quantityChange: Joi.number().required(),
 		}),
 	}),
 	controller.adjust,

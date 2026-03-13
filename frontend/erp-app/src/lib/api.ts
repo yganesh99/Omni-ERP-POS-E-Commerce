@@ -72,6 +72,20 @@ api.interceptors.response.use(
 			}
 		}
 
+		// Global error notification for non-401 or failed retries
+		if (
+			typeof window !== 'undefined' &&
+			error.response &&
+			error.response.status !== 401
+		) {
+			const backendMessage = error.response.data?.message;
+			if (backendMessage) {
+				// Simply using alert for global notification since no toast library is present
+				// alert(backendMessage);
+				console.log(backendMessage);
+			}
+		}
+
 		return Promise.reject(error);
 	},
 );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
 	Table,
@@ -10,11 +10,13 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { AddProductModal } from '@/components/inventory/AddProductModal';
+
+const PAGE_SIZE = 10;
 
 export default function InventoryPage() {
 	const router = useRouter();
@@ -22,22 +24,48 @@ export default function InventoryPage() {
 	const [products, setProducts] = useState<any[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [searchInput, setSearchInput] = useState('');
+	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(0);
+	const [limit] = useState(PAGE_SIZE);
 
-	const fetchProducts = async () => {
-		try {
-			setIsLoading(true);
-			const res = await api.get('/products');
-			setProducts(res.data.items || []);
-		} catch (error) {
-			console.error('Failed to fetch products:', error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	const fetchProducts = useCallback(
+		async (search?: string, pageNum: number = 1) => {
+			try {
+				setIsLoading(true);
+				const params: Record<string, string | number> = {
+					page: pageNum,
+					limit,
+				};
+				if (search?.trim()) params.search = search.trim();
+				const res = await api.get('/products', { params });
+				const data = res.data;
+				setProducts(data.items || []);
+				setTotal(data.total ?? 0);
+				setPage(data.page ?? pageNum);
+			} catch (error) {
+				console.error('Failed to fetch products:', error);
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[limit],
+	);
 
+	// Debounced search: apply searchQuery and refetch when it changes
 	useEffect(() => {
-		fetchProducts();
-	}, []);
+		const timer = setTimeout(() => {
+			setSearchQuery(searchInput);
+			setPage(1);
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [searchInput]);
+
+	// Fetch when search or page changes (page updates on pagination click)
+	useEffect(() => {
+		fetchProducts(searchQuery, page);
+	}, [searchQuery, page, fetchProducts]);
 
 	return (
 		<div className='space-y-6'>
@@ -69,7 +97,9 @@ export default function InventoryPage() {
 							<Search className='w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400' />
 							<input
 								type='text'
-								placeholder='Search inventory...'
+								placeholder='Search by name or SKU...'
+								value={searchInput}
+								onChange={(e) => setSearchInput(e.target.value)}
 								className='w-64 pl-9 pr-4 py-1.5 border border-brand-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue'
 							/>
 						</div>
@@ -85,12 +115,15 @@ export default function InventoryPage() {
 							<TableRow>
 								<TableHead>SKU</TableHead>
 								<TableHead>Name</TableHead>
-								<TableHead>Category</TableHead>
+								<TableHead>Categories</TableHead>
 								<TableHead className='text-right'>
 									POS Price
 								</TableHead>
 								<TableHead className='text-right'>
 									E-com Price
+								</TableHead>
+								<TableHead className='text-right'>
+									Sale (E-com)
 								</TableHead>
 								<TableHead>Status</TableHead>
 							</TableRow>
@@ -130,13 +163,23 @@ export default function InventoryPage() {
 										</TableCell>
 										<TableCell>{item.name}</TableCell>
 										<TableCell>
-											{item.category || '-'}
+											{item.categories &&
+											item.categories.length > 0
+												? item.categories
+														.map((c: any) => c.name)
+														.join(', ')
+												: '-'}
 										</TableCell>
 										<TableCell className='text-right'>
 											රු{item.posPrice?.toFixed(2)}
 										</TableCell>
 										<TableCell className='text-right'>
 											රු{item.ecommercePrice?.toFixed(2)}
+										</TableCell>
+										<TableCell className='text-right'>
+											{item.isOnSale && item.salePrice != null
+												? `රු${item.salePrice.toFixed(2)}`
+												: '-'}
 										</TableCell>
 										<TableCell>
 											<span
@@ -156,13 +199,51 @@ export default function InventoryPage() {
 							)}
 						</TableBody>
 					</Table>
+					{total > 0 && (
+						<div className='flex items-center justify-between border-t border-brand-border pt-4 mt-4'>
+							<p className='text-sm text-zinc-500'>
+								Showing {(page - 1) * limit + 1}–
+								{Math.min(page * limit, total)} of {total}{' '}
+								products
+							</p>
+							<div className='flex items-center gap-2'>
+								<Button
+									variant='outline'
+									size='sm'
+									onClick={() => setPage((p) => Math.max(1, p - 1))}
+									disabled={page <= 1 || isLoading}
+								>
+									<ChevronLeft className='w-4 h-4' />
+									Previous
+								</Button>
+								<span className='text-sm text-zinc-600 px-2'>
+									Page {page} of {Math.ceil(total / limit) || 1}
+								</span>
+								<Button
+									variant='outline'
+									size='sm'
+									onClick={() =>
+										setPage((p) =>
+											p >= Math.ceil(total / limit) ? p : p + 1,
+										)
+									}
+									disabled={
+										page >= Math.ceil(total / limit) || isLoading
+									}
+								>
+									Next
+									<ChevronRight className='w-4 h-4' />
+								</Button>
+							</div>
+						</div>
+					)}
 				</CardContent>
 			</Card>
 
 			<AddProductModal
 				isOpen={isAddModalOpen}
 				onClose={() => setIsAddModalOpen(false)}
-				onSuccess={fetchProducts}
+				onSuccess={() => fetchProducts(searchQuery, page)}
 			/>
 		</div>
 	);

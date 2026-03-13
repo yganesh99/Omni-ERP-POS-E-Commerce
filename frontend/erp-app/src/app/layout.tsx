@@ -1,5 +1,7 @@
 import './globals.css';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from '../context/AuthContext';
+import { ToastContainer } from 'react-toastify';
 
 export const metadata = {
 	title: 'ERP App',
@@ -15,6 +17,7 @@ export default function RootLayout({
 		<html lang='en'>
 			<body>
 				<AuthProvider>{children}</AuthProvider>
+				<ToastContainer position='bottom-right' />
 			</body>
 		</html>
 	);

@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 export function CheckoutBar() {
 	const [mounted, setMounted] = useState(false);
 	const cart = usePosStore((state) => state.cart);
+	const discountType = usePosStore((state) => state.discountType);
+	const discountValue = usePosStore((state) => state.discountValue);
 
 	useEffect(() => {
 		setMounted(true);
@@ -14,10 +16,23 @@ export function CheckoutBar() {
 
 	if (!mounted || cart.length === 0) return null;
 
-	const total = cart.reduce(
+	const subtotal = cart.reduce(
 		(sum, item) => sum + item.price * item.quantity,
 		0,
 	);
+	const taxAmount = cart.reduce(
+		(sum, item) =>
+			sum + item.price * item.quantity * ((item.taxRate ?? 0) / 100),
+		0,
+	);
+	let discountAmount = 0;
+	if (discountType === 'percentage' && discountValue > 0) {
+		discountAmount = (subtotal * discountValue) / 100;
+	} else if (discountType === 'fixed' && discountValue > 0) {
+		discountAmount = discountValue;
+	}
+	discountAmount = Math.min(discountAmount, subtotal);
+	const total = subtotal + taxAmount - discountAmount;
 	const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
 	return (

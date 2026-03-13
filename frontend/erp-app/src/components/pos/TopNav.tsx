@@ -10,12 +10,36 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { CloseRegisterButton } from './CloseRegisterButton';
 
 export function TopNav() {
 	const { user, logout } = useAuth();
+	const pathname = usePathname();
+
+	const navLinks = [
+		{
+			href: '/pos',
+			label: 'Register',
+			icon: <LayoutGrid className='mr-2 h-4 w-4' />,
+			exact: true,
+		},
+		{
+			href: '/pos/orders',
+			label: 'Orders',
+			icon: <Receipt className='mr-2 h-4 w-4' />,
+		},
+		{
+			href: '/pos/customers',
+			label: 'Customers',
+			icon: <Users className='mr-2 h-4 w-4' />,
+		},
+	];
+
+	const isActive = (href: string, exact?: boolean) =>
+		exact ? pathname === href : pathname.startsWith(href);
 
 	return (
 		<header className='h-16 border-b bg-background flex items-center justify-between px-4 sticky top-0 z-40'>
@@ -34,46 +58,26 @@ export function TopNav() {
 				</div>
 
 				<nav className='hidden lg:flex items-center gap-1 ml-4'>
-					<Button
-						variant='ghost'
-						className='font-semibold text-primary touch-manipulation min-h-[48px]'
-						asChild
-					>
-						<Link href='/pos'>
-							<LayoutGrid className='mr-2 h-4 w-4' /> Register
-						</Link>
-					</Button>
-					<Button
-						variant='ghost'
-						className='text-muted-foreground touch-manipulation min-h-[48px]'
-						asChild
-					>
-						<Link href='/pos/orders'>
-							<Receipt className='mr-2 h-4 w-4' /> Orders
-						</Link>
-					</Button>
-					<Button
-						variant='ghost'
-						className='text-muted-foreground touch-manipulation min-h-[48px]'
-						asChild
-					>
-						<Link href='/pos/customers'>
-							<Users className='mr-2 h-4 w-4' /> Customers
-						</Link>
-					</Button>
+					{navLinks.map(({ href, label, icon, exact }) => (
+						<Button
+							key={href}
+							variant='ghost'
+							className={`touch-manipulation min-h-[48px] ${
+								isActive(href, exact)
+									? 'font-semibold text-primary'
+									: 'text-muted-foreground'
+							}`}
+							asChild
+						>
+							<Link href={href}>
+								{icon} {label}
+							</Link>
+						</Button>
+					))}
 				</nav>
 			</div>
 
 			<div className='flex items-center gap-4 flex-1 justify-end'>
-				<div className='relative w-full max-w-sm hidden md:block mr-2'>
-					<Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-					<Input
-						type='search'
-						placeholder='Search by product name'
-						className='w-full pl-9 bg-zinc-100 border-transparent focus:bg-white focus:border-zinc-300 focus:ring-zinc-200 h-10 transition-all rounded-lg'
-						autoFocus
-					/>
-				</div>
 				{user?.role === 'admin' && (
 					<Button
 						variant='outline'
@@ -85,13 +89,6 @@ export function TopNav() {
 						</Link>
 					</Button>
 				)}
-				<Button
-					variant='ghost'
-					size='icon'
-					className='md:hidden h-10 w-10 touch-manipulation'
-				>
-					<Search className='h-5 w-5' />
-				</Button>
 
 				<CloseRegisterButton />
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -31,12 +31,13 @@ export function AddProductModal({
 		sku: '',
 		name: '',
 		description: '',
-		category: '',
+		categories: [] as string[],
 		unit: 'pcs',
 		posPrice: '',
 		ecommercePrice: '',
-		costPrice: '',
 		visibility: 'both',
+		isOnSale: false,
+		salePrice: '',
 	});
 
 	const handleChange = (
@@ -44,6 +45,31 @@ export function AddProductModal({
 	) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
+	};
+
+	const [categoriesList, setCategoriesList] = useState<any[]>([]);
+
+	useEffect(() => {
+		if (isOpen) {
+			api.get('/categories')
+				.then((res) =>
+					setCategoriesList(
+						res.data.items || res.data.data || res.data || [],
+					),
+				)
+				.catch((err) =>
+					console.error('Failed to fetch categories:', err),
+				);
+		}
+	}, [isOpen]);
+
+	const handleCategoryToggle = (id: string) => {
+		setFormData((prev) => ({
+			...prev,
+			categories: prev.categories.includes(id)
+				? prev.categories.filter((cId) => cId !== id)
+				: [...prev.categories, id],
+		}));
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +86,13 @@ export function AddProductModal({
 				...filledFormData,
 				posPrice: Number(filledFormData.posPrice),
 				ecommercePrice: Number(filledFormData.ecommercePrice),
-				costPrice: Number(filledFormData.costPrice),
+				isOnSale: Boolean(filledFormData.isOnSale),
+				salePrice:
+					filledFormData.salePrice !== undefined &&
+					filledFormData.salePrice !== ''
+						? Number(filledFormData.salePrice)
+						: undefined,
+				categories: formData.categories,
 			};
 
 			await api.post('/products', payload);
@@ -71,12 +103,13 @@ export function AddProductModal({
 				sku: '',
 				name: '',
 				description: '',
-				category: '',
+				categories: [],
 				unit: 'pcs',
 				posPrice: '',
 				ecommercePrice: '',
-				costPrice: '',
 				visibility: 'both',
+				isOnSale: false,
+				salePrice: '',
 			});
 		} catch (err: any) {
 			console.error('Error adding product:', err);
@@ -165,19 +198,37 @@ export function AddProductModal({
 
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<label
-								htmlFor='category'
-								className='text-sm font-medium'
-							>
-								Category
+							<label className='text-sm font-medium'>
+								Categories
 							</label>
-							<Input
-								id='category'
-								name='category'
-								value={formData.category}
-								onChange={handleChange}
-								placeholder='e.g. Cotton'
-							/>
+							<div className='max-h-32 overflow-y-auto border rounded-md p-2 space-y-2'>
+								{categoriesList.length === 0 ? (
+									<p className='text-xs text-zinc-500'>
+										No active categories found
+									</p>
+								) : (
+									categoriesList.map((cat) => (
+										<label
+											key={cat._id}
+											className='flex items-center space-x-2 text-sm'
+										>
+											<input
+												type='checkbox'
+												checked={formData.categories.includes(
+													cat._id,
+												)}
+												onChange={() =>
+													handleCategoryToggle(
+														cat._id,
+													)
+												}
+												className='rounded border-zinc-300'
+											/>
+											<span>{cat.name}</span>
+										</label>
+									))
+								)}
+							</div>
 						</div>
 						<div className='space-y-2'>
 							<label
@@ -193,33 +244,20 @@ export function AddProductModal({
 								onChange={handleChange}
 								className='flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
 							>
-								<option value='pcs'>Pieces (pcs)</option>
-								<option value='m'>Meters (m)</option>
-								<option value='kg'>Kilograms (kg)</option>
+								<option value='pcs'>Pieces (pcs) — whole numbers</option>
+								<option value='bales'>Bales — whole numbers</option>
+								<option value='cartons'>Cartons — whole numbers</option>
+								<option value='m'>Meters (m) — decimals</option>
+								<option value='kg'>Kilograms (kg) — decimals</option>
+								<option value='l'>Litres (l) — decimals</option>
 							</select>
+							<p className='text-xs text-muted-foreground'>
+								POS and inventory quantities follow this unit (whole vs decimal).
+							</p>
 						</div>
 					</div>
 
 					<div className='grid grid-cols-3 gap-4'>
-						<div className='space-y-2'>
-							<label
-								htmlFor='costPrice'
-								className='text-sm font-medium'
-							>
-								Cost Price *
-							</label>
-							<Input
-								id='costPrice'
-								name='costPrice'
-								type='number'
-								min='0'
-								step='0.01'
-								required
-								value={formData.costPrice}
-								onChange={handleChange}
-								placeholder='0.00'
-							/>
-						</div>
 						<div className='space-y-2'>
 							<label
 								htmlFor='posPrice'
@@ -257,6 +295,54 @@ export function AddProductModal({
 								onChange={handleChange}
 								placeholder='0.00'
 							/>
+						</div>
+						<div className='space-y-2 col-span-3'>
+							<div className='flex items-center justify-between gap-4'>
+								<label className='text-sm font-medium'>
+									E-com Sale
+								</label>
+								<div className='flex items-center gap-2'>
+									<input
+										id='isOnSale'
+										name='isOnSale'
+										type='checkbox'
+										checked={formData.isOnSale}
+										onChange={(e) =>
+											setFormData((prev) => ({
+												...prev,
+												isOnSale: e.target.checked,
+											}))
+										}
+										className='rounded border-zinc-300'
+									/>
+									<label
+										htmlFor='isOnSale'
+										className='text-sm'
+									>
+										Mark as on sale for ecommerce
+									</label>
+								</div>
+							</div>
+							{formData.isOnSale && (
+								<div className='space-y-1'>
+									<label
+										htmlFor='salePrice'
+										className='text-xs font-medium text-zinc-600'
+									>
+										Sale Price (E-com)
+									</label>
+									<Input
+										id='salePrice'
+										name='salePrice'
+										type='number'
+										min='0'
+										step='0.01'
+										value={formData.salePrice}
+										onChange={handleChange}
+										placeholder='0.00'
+									/>
+								</div>
+							)}
 						</div>
 					</div>
 

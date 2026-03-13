@@ -4,6 +4,7 @@ const Product = require('../models/product.model');
 const inventoryService = require('./inventory.service');
 const creditService = require('./credit.service');
 const { logAudit } = require('../middlewares/auditLog');
+const { calculateDiscount } = require('../utils/discount.util');
 
 function generateOrderNumber() {
 	const ts = Date.now().toString(36).toUpperCase();
@@ -16,7 +17,7 @@ function generateOrderNumber() {
  */
 async function checkout(
 	storeId,
-	{ customerId, items, sessionId },
+	{ customerId, items, sessionId, discountType, discountValue },
 	ttlMinutes = 15,
 ) {
 	// Validate products and build order items
@@ -39,7 +40,10 @@ async function checkout(
 			);
 		}
 
-		const unitPrice = product.ecommercePrice;
+		const unitPrice =
+			product.isOnSale && typeof product.salePrice === 'number'
+				? product.salePrice
+				: product.ecommercePrice;
 		const lineTax = unitPrice * item.quantity * (product.taxRate / 100);
 		const lineTotal = unitPrice * item.quantity + lineTax;
 
@@ -61,6 +65,13 @@ async function checkout(
 	// Lock stock
 	await inventoryService.lockStock(storeId, items, sessionId, ttlMinutes);
 
+	// Compute discount
+	const discountAmount = calculateDiscount(
+		subtotal,
+		discountType,
+		discountValue,
+	);
+
 	// Create pending order
 	const order = await Order.create({
 		storeId,
@@ -71,7 +82,10 @@ async function checkout(
 		items: orderItems,
 		subtotal,
 		taxAmount,
-		totalAmount: subtotal + taxAmount,
+		discountType: discountType || null,
+		discountValue: discountValue || 0,
+		discountAmount,
+		totalAmount: subtotal + taxAmount - discountAmount,
 		paymentMethod: 'card',
 		sessionId,
 	});

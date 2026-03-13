@@ -14,11 +14,12 @@ router.post(
 			sku: Joi.string().required(),
 			name: Joi.string().required(),
 			description: Joi.string().allow('').optional(),
-			category: Joi.string().allow('').optional(),
+			categories: Joi.array().items(Joi.string()).optional(),
 			unit: Joi.string().allow('').optional(),
 			posPrice: Joi.number().min(0).required(),
 			ecommercePrice: Joi.number().min(0).required(),
-			costPrice: Joi.number().min(0).required(),
+			isOnSale: Joi.boolean().optional(),
+			salePrice: Joi.number().min(0).optional(),
 			taxRate: Joi.number().min(0).optional(),
 			visibility: Joi.string()
 				.valid('pos_only', 'ecommerce_only', 'both')
@@ -30,6 +31,11 @@ router.post(
 );
 
 router.get('/', controller.getAll);
+router.get(
+	'/pos-search',
+	auth(['admin', 'store_manager', 'inventory_manager', 'cashier']),
+	controller.searchForPos,
+);
 router.get('/:id', controller.getById);
 
 router.put(
@@ -37,12 +43,14 @@ router.put(
 	celebrate({
 		[Segments.BODY]: Joi.object({
 			name: Joi.string().allow(''),
+			sku: Joi.string().optional(),
 			description: Joi.string().allow(''),
-			category: Joi.string().allow(''),
+			categories: Joi.array().items(Joi.string()).optional(),
 			unit: Joi.string().allow(''),
 			posPrice: Joi.number().min(0),
 			ecommercePrice: Joi.number().min(0),
-			costPrice: Joi.number().min(0),
+			isOnSale: Joi.boolean().optional(),
+			salePrice: Joi.number().min(0).allow(null),
 			taxRate: Joi.number().min(0),
 			visibility: Joi.string().valid(
 				'pos_only',

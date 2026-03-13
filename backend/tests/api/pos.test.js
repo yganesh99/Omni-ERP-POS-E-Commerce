@@ -57,7 +57,6 @@ async function createPrerequisites(api) {
 		name: 'POS Product',
 		posPrice: 20,
 		ecommercePrice: 22,
-		costPrice: 10,
 		visibility: 'pos_only',
 	});
 	if (prodRes.status !== 201) {
